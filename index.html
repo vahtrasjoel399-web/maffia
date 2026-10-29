@@ -581,7 +581,7 @@ const QR_CDN = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.j
 const MIN_P = 4, MAX_P = 20;
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FLIP_MS = REDUCED ? 0 : 520;          // совпадает с --t-flip
-const STALE_ROOM_MS = 12 * 3600 * 1000;      // комнату старше 12 ч можно занять заново
+const STALE_ROOM_MS = 24 * 3600 * 1000;      // брошенную комнату (старше суток) можно занять заново
 
 /* =====================================================================
    ИКОНКИ (inline SVG, рисуются цветом текста)
@@ -995,14 +995,34 @@ async function getSb() {
   return sb;
 }
 
-/* Подписка: при любом изменении в базе вызывается onChange.
-   После подключения (и переподключения) тоже, чтобы ничего не пропустить. */
+/* Подписка: при изменении в базе вызывается onChange(событие).
+   После подключения (и переподключения) тоже, без события, чтобы ничего не пропустить. */
 function subscribe(name, specs, onChange) {
-  const ch = sb.channel(name + '-' + Date.now());
+  const ch = sb.channel(name + '-' + Date.now() + '-' + randInt(1e6));
   specs.forEach(spec => ch.on('postgres_changes', { schema: 'public', ...spec }, onChange));
-  ch.subscribe(status => { if (status === 'SUBSCRIBED') onChange(); });
+  ch.subscribe(status => { if (status === 'SUBSCRIBED') onChange(null); });
   return ch;
 }
+
+/* Подписки на одну комнату. Supabase не умеет фильтровать удаления по room_code,
+   поэтому удаления приходят из всех комнат: пропускаем только «свои» (по id игрока). */
+function subscribeRoom(prefix, code, knownIds, onChange) {
+  const sync = debounce(onChange, 150);
+  return subscribe(prefix + '-' + code, [
+    { event: '*', table: 'mafia_players', filter: `room_code=eq.${code}` },
+    { event: 'DELETE', table: 'mafia_players' },
+    { event: '*', table: 'mafia_rooms', filter: `code=eq.${code}` },
+  ], ev => {
+    if (ev?.eventType === 'DELETE' && ev.table === 'mafia_players') {
+      const old = ev.old || {};
+      if (old.room_code ? old.room_code !== code : !knownIds().has(old.id)) return;   // чужая комната
+    }
+    sync();
+  });
+}
+
+/* Счётчик запросов: если ответы пришли не по порядку, старый не перетрёт новый */
+let syncSeq = 0;
 function unsubscribe(ctx) {
   if (ctx.ch && sb) sb.removeChannel(ctx.ch);
   ctx.ch = null;
@@ -1021,8 +1041,8 @@ async function hostCreate() {
     await getSb();
     for (let attempt = 0; attempt < 12; attempt++) {
       const code = String(1000 + randInt(9000));
-      let { error } = await sb.from('mafia_rooms').insert({ code, status: 'lobby' });
-      if (!error) return openHost(code, true);
+      let { data: made, error } = await sb.from('mafia_rooms').insert({ code, status: 'lobby' }).select('created_at').single();
+      if (!error) return openHost(code, made.created_at, true);
       if (error.code !== '23505') throw error;           // 23505: такой код уже занят
 
       // Код занят. Если комната закрыта или давно брошена, освобождаем её.
@@ -1030,8 +1050,8 @@ async function hostCreate() {
       if (data && (data.status === 'closed' || Date.now() - new Date(data.created_at) > STALE_ROOM_MS)) {
         await sb.from('mafia_players').delete().eq('room_code', code);
         await sb.from('mafia_rooms').delete().eq('code', code);
-        ({ error } = await sb.from('mafia_rooms').insert({ code, status: 'lobby' }));
-        if (!error) return openHost(code, true);
+        ({ data: made, error } = await sb.from('mafia_rooms').insert({ code, status: 'lobby' }).select('created_at').single());
+        if (!error) return openHost(code, made.created_at, true);
       }
     }
     toast('Не удалось подобрать свободный код. Попробуй ещё раз.');
@@ -1043,12 +1063,13 @@ async function hostCreate() {
   }
 }
 
-async function openHost(code, fresh = false) {
+async function openHost(code, created, fresh = false) {
   try { await getSb(); } catch { return toast('Нет связи с сервером. Проверь интернет.'); }
+  unsubscribe(P);                                     // на одном телефоне одна роль за раз
   state.mode = 'host';
-  Object.assign(H, { code, status: 'lobby', players: [], loaded: false, busy: false, rolesHidden: false });
+  Object.assign(H, { code, created, status: 'lobby', players: [], loaded: false, busy: false, rolesHidden: false });
   if (fresh) { H.counts = autoCounts(MIN_P); H.touched = false; }
-  store.set('mafia_host', { room: code });
+  store.set('mafia_host', { room: code, created });
   setUrl(null);
 
   $('#h-code').textContent = code;
@@ -1060,12 +1081,7 @@ async function openHost(code, fresh = false) {
   show('s-host-lobby');
 
   unsubscribe(H);
-  const soon = debounce(hostSync, 150);
-  H.ch = subscribe('host-' + code, [
-    { event: '*', table: 'mafia_players', filter: `room_code=eq.${code}` },
-    { event: 'DELETE', table: 'mafia_players' },          // DELETE не фильтруется по полям, ловим все
-    { event: '*', table: 'mafia_rooms', filter: `code=eq.${code}` },
-  ], soon);
+  H.ch = subscribeRoom('host', code, () => new Set(H.players.map(p => p.id)), hostSync);
 }
 
 async function renderQR(link) {
@@ -1083,18 +1099,25 @@ async function renderQR(link) {
 /* Перечитать комнату и игроков из базы и перерисовать нужный экран */
 async function hostSync() {
   if (state.mode !== 'host' || !H.code) return;
-  const code = H.code;
+  const code = H.code, seq = ++syncSeq;
   const [room, list] = await Promise.all([
-    sb.from('mafia_rooms').select('status').eq('code', code).maybeSingle(),
+    sb.from('mafia_rooms').select('status,created_at').eq('code', code).maybeSingle(),
     sb.from('mafia_players').select('id,name,role,alive,muted,created_at').eq('room_code', code).order('created_at'),
   ]);
-  if (state.mode !== 'host' || H.code !== code) return;
+  if (state.mode !== 'host' || H.code !== code || seq !== syncSeq) return;
   if (room.error || list.error) return toast('Нет связи с сервером');
   if (!room.data || room.data.status === 'closed') {
     store.del('mafia_host');
     toast('Комната закрыта');
     return goHome();
   }
+  // Код комнаты уже занят другой игрой: в неё не заходим
+  if (H.created && room.data.created_at !== H.created) {
+    store.del('mafia_host');
+    toast(`Комната ${code} уже занята другой игрой`);
+    return goHome();
+  }
+  if (!H.created) { H.created = room.data.created_at; store.set('mafia_host', { room: code, created: H.created }); }
   H.status = room.data.status;
   H.players = list.data;
   H.loaded = true;
@@ -1130,17 +1153,23 @@ async function hostDeal() {
   H.busy = true;
   $('#deal-host').disabled = true;
   try {
-    const { data: players, error } = await sb.from('mafia_players').select('id').eq('room_code', H.code).order('created_at');
-    if (error) throw error;
-    const chk = checkRoles(H.counts, players.length);
-    if (!chk.ok) { toast(chk.msg); return false; }
+    const code = H.code;
+    for (let attempt = 0; ; attempt++) {
+      const { data: players, error } = await sb.from('mafia_players').select('id').eq('room_code', code).order('created_at');
+      if (error) throw error;
+      const chk = checkRoles(H.counts, players.length);
+      if (!chk.ok) { toast(chk.msg); return false; }
 
-    const deck = buildDeck(H.counts, players.length);
-    await sb.from('mafia_rooms').update({ status: 'dealing' }).eq('code', H.code);
-    const res = await Promise.all(players.map((p, i) =>
-      sb.from('mafia_players').update({ role: deck[i], alive: true, muted: false }).eq('id', p.id)));
-    if (res.some(r => r.error)) throw res.find(r => r.error).error;
-    const up = await sb.from('mafia_rooms').update({ status: 'started' }).eq('code', H.code);
+      const deck = buildDeck(H.counts, players.length);
+      await sb.from('mafia_rooms').update({ status: 'dealing' }).eq('code', code);
+      const res = await Promise.all(players.map((p, i) =>
+        sb.from('mafia_players').update({ role: deck[i], alive: true, muted: false })
+          .eq('id', p.id).eq('room_code', code).select('id')));
+      if (res.some(r => r.error)) throw res.find(r => r.error).error;
+      if (res.every(r => r.data?.length === 1)) break;           // все получили роль
+      if (attempt >= 2) throw new Error('Состав комнаты меняется во время раздачи');
+    }
+    const up = await sb.from('mafia_rooms').update({ status: 'started' }).eq('code', code);
     if (up.error) throw up.error;
     H.rolesHidden = false;
     return true;
@@ -1194,8 +1223,23 @@ async function onJoinSubmit(e) {
     if (error) throw error;
     if (!room) return err('Комнаты с таким кодом нет. Проверь цифры.');
     if (room.status === 'closed') return err('Эта комната уже закрыта.');
+
+    const prev = store.get('mafia_player');
+    if (prev?.id && prev.room === code) {
+      // Уже в этой комнате: возвращаемся, а не создаём второго игрока
+      const { data: still } = await sb.from('mafia_players').select('id').eq('id', prev.id).eq('room_code', code).maybeSingle();
+      if (still) {
+        await sb.from('mafia_players').update({ name }).eq('id', prev.id).eq('room_code', code);
+        store.set('mafia_myname', name);
+        return openPlayer(prev.id, code);
+      }
+    }
     const { data: me, error: e2 } = await sb.from('mafia_players').insert({ room_code: code, name }).select('id').single();
     if (e2) throw e2;
+    // Был в другой комнате: убираем себя оттуда, чтобы не висеть там «призраком»
+    if (prev?.id && prev.room !== code) {
+      sb.from('mafia_players').delete().eq('id', prev.id).eq('room_code', prev.room).then(() => {});
+    }
     store.set('mafia_myname', name);
     store.set('mafia_player', { id: me.id, room: code });
     openPlayer(me.id, code);
@@ -1209,6 +1253,7 @@ async function onJoinSubmit(e) {
 
 async function openPlayer(id, code) {
   try { await getSb(); } catch { renderHome(); return toast('Нет связи с сервером. Проверь интернет.'); }
+  unsubscribe(H);
   state.mode = 'player';
   Object.assign(P, { id, code, me: null, status: null, roster: [], lastRole: null, busy: false });
   plCard.reset();
@@ -1221,23 +1266,18 @@ async function openPlayer(id, code) {
   show('s-player');
 
   unsubscribe(P);
-  const soon = debounce(plSync, 150);
-  P.ch = subscribe('player-' + id, [
-    { event: '*', table: 'mafia_players', filter: `room_code=eq.${code}` },
-    { event: 'DELETE', table: 'mafia_players' },
-    { event: '*', table: 'mafia_rooms', filter: `code=eq.${code}` },
-  ], soon);
+  P.ch = subscribeRoom('player', code, () => new Set([P.id, ...P.roster.map(p => p.id)]), plSync);
 }
 
 async function plSync() {
   if (state.mode !== 'player' || !P.id) return;
-  const { id, code } = P;
+  const { id, code } = P, seq = ++syncSeq;
   const [room, me, list] = await Promise.all([
     sb.from('mafia_rooms').select('status').eq('code', code).maybeSingle(),
-    sb.from('mafia_players').select('id,name,role,alive,muted').eq('id', id).maybeSingle(),
+    sb.from('mafia_players').select('id,name,role,alive,muted').eq('id', id).eq('room_code', code).maybeSingle(),
     sb.from('mafia_players').select('id,name').eq('room_code', code).order('created_at'),
   ]);
-  if (state.mode !== 'player' || P.id !== id) return;
+  if (state.mode !== 'player' || P.id !== id || seq !== syncSeq) return;
   if (room.error || me.error || list.error) return toast('Нет связи с сервером');
   if (!room.data || room.data.status === 'closed') return plGone('Ведущий закрыл комнату.');
   if (!me.data) return plGone('Тебя нет в этой комнате. Возможно, ведущий убрал тебя из списка.');
@@ -1342,7 +1382,7 @@ const actions = {
   'back-home':   () => goHome(),
   'go-join':     () => openJoin(),
   'host-create': () => hostCreate(),
-  'resume-host':   () => { const h = store.get('mafia_host'); if (h?.room) openHost(h.room); },
+  'resume-host':   () => { const h = store.get('mafia_host'); if (h?.room) openHost(h.room, h.created); },
   'resume-player': () => { const p = store.get('mafia_player'); if (p?.id) openPlayer(p.id, p.room); },
 
   // Настройка
@@ -1369,7 +1409,7 @@ const actions = {
     const patch = field === 'alive' ? { alive: !p.alive } : { muted: !p.muted };
     Object.assign(p, patch);
     renderPanel();                                            // сразу на экране
-    if (state.mode === 'host') hostUpdate(sb.from('mafia_players').update(patch).eq('id', p.id));
+    if (state.mode === 'host') hostUpdate(sb.from('mafia_players').update(patch).eq('id', p.id).eq('room_code', H.code));
   },
   'toggle-roles': () => { const ctx = state.mode === 'local' ? L : H; ctx.rolesHidden = !ctx.rolesHidden; renderPanel(); },
   'all-speak': () => {
@@ -1399,7 +1439,7 @@ const actions = {
   'kick': async b => {
     const p = H.players.find(x => x.id === b.dataset.id);
     if (!p || !await ask(`Убрать «${p.name}» из комнаты?`, 'Убрать', true)) return;
-    hostUpdate(sb.from('mafia_players').delete().eq('id', p.id));
+    hostUpdate(sb.from('mafia_players').delete().eq('id', p.id).eq('room_code', H.code));
   },
   'share-link': async () => {
     const url = roomLink(H.code);
@@ -1486,7 +1526,7 @@ window.addEventListener('beforeunload', e => {
   renderHome();
   if (room) {
     if (savedPlayer?.room === room) openPlayer(savedPlayer.id, room);   // вернулся после перезагрузки
-    else if (savedHost?.room === room) openHost(room);
+    else if (savedHost?.room === room) openHost(room, savedHost.created);
     else openJoin(room);                                               // пришёл по ссылке или QR
   } else if (savedPlayer?.id) {
     openPlayer(savedPlayer.id, savedPlayer.room);
