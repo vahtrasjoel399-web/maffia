@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1412">
+<meta name="color-scheme" content="dark">
+<title>Мафия</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1412'/%3E%3Cpath d='M16 4 27 16 16 28 5 16z' fill='none' stroke='%23c23a2c' stroke-width='2.5'/%3E%3C/svg%3E">
+<style>
+/*
+  Направление дизайна
+  Референс:  нуарные афиши 40-х, игральные карты, досье из папки следователя
+  Настроение: тихо, серьёзно, немного театрально. Ночь, город спит.
+  Палитра:   тёплый уголь (фон), слоновая кость (текст), один акцент: кирпично-красный
+  Шрифты:    системный sans для интерфейса + книжный serif (Iowan/Palatino/Georgia) для имён и ролей
+  Сетка:     одна колонка до 520px, шаг 4/8px, крупные кнопки 56px, радиусы 6 / 10 / 16
+  Подпись:   карта роли с двойной рамкой и ромбом, переворачивается как настоящая
+*/
+:root{
+  --bg:        oklch(15.5% 0.012 30);
+  --surface:   oklch(19.5% 0.013 30);
+  --surface-2: oklch(24% 0.015 30);
+  --line:      oklch(30% 0.016 30);
+  --line-2:    oklch(40% 0.018 30);
+  --text:      oklch(93% 0.012 75);
+  --muted:     oklch(74% 0.014 60);
+  --faint:     oklch(58% 0.012 50);
+  --accent:        oklch(52% 0.19 27);
+  --accent-strong: oklch(45% 0.18 27);
+  --accent-text:   oklch(72% 0.15 27);
+  --accent-soft:   oklch(28% 0.07 27);
+  --paper: oklch(92% 0.02 80);
+  --ink:   oklch(22% 0.015 40);
+
+  --f-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Noto Serif", serif;
+
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px;
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --t-fast: 150ms; --t-mid: 250ms; --t-flip: 520ms;
+  --tap: 56px;
+}
+
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+[hidden]{ display: none !important; }
+html{ background: var(--bg); -webkit-text-size-adjust: 100%; }
+body{
+  font: 400 17px/1.5 var(--f-ui);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+button, input{ font: inherit; color: inherit; }
+button{ cursor: pointer; touch-action: manipulation; }
+ul, ol{ list-style: none; }
+
+#app{ max-width: 520px; margin: 0 auto; }
+
+/* ---------- Экран и его части ---------- */
+.screen{ min-height: 100dvh; display: flex; flex-direction: column; }
+.content{ flex: 1; padding: var(--s4) var(--s4) var(--s6); }
+
+.bar{
+  position: sticky; top: 0; z-index: 5;
+  display: flex; align-items: center; gap: var(--s2);
+  min-height: 56px; padding: calc(env(safe-area-inset-top) + 4px) var(--s2) 4px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.bar h2{ flex: 1; font-size: 18px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar .bar-side{ padding-right: var(--s3); color: var(--muted); font-size: 16px; font-variant-numeric: tabular-nums; }
+
+.dock{
+  position: sticky; bottom: 0; z-index: 5;
+  padding: var(--s3) var(--s4) calc(env(safe-area-inset-bottom) + var(--s3));
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  display: grid; gap: var(--s2);
+}
+.dock-msg{ font-size: 16px; color: var(--muted); text-align: center; min-height: 24px; }
+.dock-msg.err{ color: var(--accent-text); }
+
+/* ---------- Кнопки ---------- */
+.btn{
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
+  width: 100%; min-height: var(--tap); padding: 0 var(--s5);
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: 18px; font-weight: 600; line-height: 1.2; text-align: center;
+  transition: background-color var(--t-fast) var(--ease), opacity var(--t-fast) var(--ease);
+}
+.btn:active{ background: var(--line); }
+.btn svg{ width: 22px; height: 22px; flex: none; }
+.btn.primary{ background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn.primary:active{ background: var(--accent-strong); }
+.btn.light{ background: var(--paper); border-color: var(--paper); color: var(--ink); }
+.btn.ghost{ background: transparent; }
+.btn.ghost:active{ background: var(--surface-2); }
+.btn.danger{ background: transparent; color: var(--accent-text); border-color: var(--accent-soft); }
+.btn.danger-fill{ background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn.small{ width: auto; min-height: 44px; padding: 0 var(--s4); font-size: 16px; }
+.btn.big{ min-height: 64px; font-size: 20px; }
+.btn:disabled{ opacity: .4; cursor: default; }
+
+.icon-btn{
+  display: grid; place-items: center; flex: none;
+  width: 48px; height: 48px;
+  border: 0; border-radius: var(--r-sm); background: transparent;
+}
+.icon-btn:active{ background: var(--surface-2); }
+.icon-btn svg{ width: 24px; height: 24px; }
+
+/* Крупная кнопка-выбор на стартовом экране */
+.choice{
+  display: grid; gap: var(--s1);
+  width: 100%; padding: var(--s5) var(--s5);
+  text-align: left;
+  border: 1px solid var(--line-2); border-radius: var(--r-md);
+  background: var(--surface);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.choice:active{ background: var(--surface-2); }
+.choice-t{ font-size: 21px; font-weight: 650; }
+.choice-s{ font-size: 16px; color: var(--muted); }
+.choice.accent{ border-color: var(--accent); }
+
+/* ---------- Стартовый экран ---------- */
+.home{ padding: calc(env(safe-area-inset-top) + var(--s7)) var(--s4) var(--s6); display: flex; flex-direction: column; gap: var(--s6); flex: 1; }
+.home-mark{ width: 56px; height: 56px; color: var(--accent); }
+.home h1{ font: 600 56px/1.05 var(--f-display); letter-spacing: -.01em; margin-top: var(--s4); }
+.home .lead{ font-size: 19px; color: var(--muted); margin-top: var(--s3); max-width: 30ch; }
+.stack{ display: grid; gap: var(--s3); }
+.home-foot{ margin-top: auto; color: var(--faint); font-size: 15px; }
+
+/* ---------- Заголовки секций ---------- */
+.sec-head{ display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin: var(--s6) 0 var(--s3); }
+.sec-head:first-child{ margin-top: var(--s2); }
+.sec-t{ font: 600 25px/1.2 var(--f-display); }
+.note{ color: var(--muted); font-size: 16px; }
+
+/* ---------- Степпер +/− ---------- */
+.stepper{ display: inline-flex; align-items: center; gap: var(--s1); flex: none; }
+.stepper button{
+  width: 48px; height: 48px; display: grid; place-items: center;
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: var(--surface-2); font-size: 26px; line-height: 1;
+}
+.stepper button:active{ background: var(--line); }
+.stepper button:disabled{ opacity: .3; }
+.stepper output{ min-width: 44px; text-align: center; font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.count-row{ display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s3) 0; }
+.count-row .lbl{ font-size: 18px; }
+
+/* ---------- Имена ---------- */
+.names{ display: grid; gap: var(--s2); margin-top: var(--s2); }
+.names li{ display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: var(--s2); }
+.num{ color: var(--faint); font-variant-numeric: tabular-nums; text-align: right; font-size: 16px; }
+.input{
+  width: 100%; height: 52px; padding: 0 var(--s4);
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  font-size: 17px; outline: none;
+}
+.input:focus{ border-color: var(--accent-text); }
+.input::placeholder{ color: var(--faint); }
+
+/* ---------- Редактор ролей ---------- */
+.roles li{
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s2) 0; border-bottom: 1px solid var(--line);
+}
+.roles li:last-child{ border-bottom: 0; }
+.ri{ width: 40px; height: 40px; display: grid; place-items: center; flex: none; border-radius: var(--r-sm); background: var(--surface); color: var(--muted); }
+.ri svg{ width: 24px; height: 24px; }
+.ri.t-mafia{ color: var(--accent-text); }
+.ri.t-solo{ color: var(--text); }
+.rn{ flex: 1; font-size: 18px; line-height: 1.25; }
+.rn small{ display: block; font-size: 15px; color: var(--faint); }
+.civ-n{ min-width: 44px; margin-right: 52px; text-align: center; font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* ---------- Карта роли с переворотом ---------- */
+.flip{
+  width: min(78vw, 300px, calc((100dvh - 330px) * .714));
+  min-width: 190px;
+  aspect-ratio: 5 / 7;
+  margin: 0 auto;
+  perspective: 1400px;
+}
+.card-inner{
+  position: relative; width: 100%; height: 100%;
+  transform-style: preserve-3d; -webkit-transform-style: preserve-3d;
+  transition: transform var(--t-flip) var(--ease);
+}
+.flip.is-flipped .card-inner{ transform: rotateY(180deg); }
+.face{
+  position: absolute; inset: 0;
+  border-radius: var(--r-lg); overflow: hidden;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  box-shadow: 0 18px 40px rgb(0 0 0 / .45);
+}
+.face.back{ background: var(--surface-2); border: 1px solid var(--line-2); color: var(--line-2); }
+.face.back svg{ width: 100%; height: 100%; display: block; }
+.face.back .em{ color: var(--accent); }
+.face.back .mono{ fill: var(--text); font-family: var(--f-display); }
+.face.front{
+  transform: rotateY(180deg);
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: var(--s5) var(--s4);
+  background: var(--paper); color: var(--ink);
+}
+/* Пока карта скрыта, лицевая сторона пустая и невидимая: никаких намёков */
+.face.front:empty{ visibility: hidden; }
+.face.front.t-mafia{ background: oklch(34% 0.12 27); color: var(--paper); }
+.face.front.t-solo{ background: oklch(12% 0.01 30); color: var(--paper); border: 1px solid var(--accent); }
+.f-team{ font-size: 14px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
+.f-icon{ flex: 1; display: grid; place-items: center; width: 100%; min-height: 0; }
+.f-icon svg{ width: min(42%, 120px); height: auto; }
+.t-mafia .f-icon, .t-solo .f-icon{ color: var(--accent-text); }
+.t-town .f-icon{ color: var(--accent); }
+.f-name{ font: 600 clamp(28px, 9vw, 36px)/1.1 var(--f-display); }
+.f-desc{ font-size: 16px; line-height: 1.4; margin-top: var(--s2); opacity: .9; }
+
+/* ---------- Экран раздачи ---------- */
+.pass{ flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s4); padding: var(--s4); text-align: center; }
+.pass-k{ color: var(--muted); font-size: 18px; }
+.pass-name{ font: 600 clamp(32px, 10vw, 44px)/1.1 var(--f-display); margin-top: calc(var(--s3) * -1); word-break: break-word; }
+.hint{ color: var(--muted); font-size: 17px; max-width: 30ch; min-height: 52px; text-align: center; margin: 0 auto; }
+
+/* ---------- Панель ведущего ---------- */
+.tally{ display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: var(--s2); }
+.tally-i{ padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.tally-n{ display: block; font: 600 40px/1.05 var(--f-display); font-variant-numeric: tabular-nums; }
+.tally-l{ color: var(--muted); font-size: 16px; }
+.tally-i.mafia .tally-n{ color: var(--accent-text); }
+.tally-note{ margin-top: var(--s3); padding: var(--s3) var(--s4); border-radius: var(--r-md); background: var(--accent-soft); color: var(--paper); font-weight: 600; }
+
+.list-head{ display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin: var(--s5) 0 var(--s1); }
+.list-head span{ color: var(--muted); font-size: 16px; }
+.list-head .btn svg{ width: 20px; height: 20px; }
+
+.plist li{
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--s2);
+  padding: var(--s2) 0; border-bottom: 1px solid var(--line);
+}
+.p-main{ min-width: 0; }
+.p-name{ display: block; font-size: 19px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-role{ display: inline-flex; align-items: center; gap: 6px; font-size: 16px; color: var(--muted); }
+.p-role svg{ width: 18px; height: 18px; }
+.p-role.t-mafia{ color: var(--accent-text); }
+.p-role.t-solo{ color: var(--text); }
+.plist li.dead .p-name{ text-decoration: line-through; color: var(--faint); }
+.plist li.dead .p-role{ color: var(--faint); }
+
+.tog{
+  width: 68px; height: 60px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  background: transparent; color: var(--muted);
+  font-size: 14px; font-weight: 600;
+  transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.tog svg{ width: 24px; height: 24px; }
+.tog-dead[aria-pressed="true"]{ background: oklch(40% 0.005 60); border-color: oklch(40% 0.005 60); color: var(--text); }
+.tog-mute[aria-pressed="true"]{ background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+.panel-actions{ display: grid; gap: var(--s3); margin-top: var(--s5); }
+
+/* ---------- Онлайн: комната ---------- */
+.room{ display: grid; grid-template-columns: 1fr auto; gap: var(--s4); align-items: center; padding: var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.room .k{ color: var(--muted); font-size: 16px; }
+.room .code{ display: block; font: 600 56px/1 var(--f-display); letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+.qr{ width: 128px; height: 128px; padding: 6px; background: var(--paper); border-radius: var(--r-sm); }
+.qr svg{ width: 100%; height: 100%; display: block; }
+.room .link{ grid-column: 1 / -1; font-size: 15px; color: var(--faint); word-break: break-all; }
+.share-row{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); margin-top: var(--s3); }
+
+.roster li{ display: flex; align-items: center; gap: var(--s3); min-height: 52px; border-bottom: 1px solid var(--line); }
+.roster li .nm{ flex: 1; font-size: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster li .num{ width: 24px; }
+.roster .me{ color: var(--accent-text); font-weight: 600; }
+.empty{ color: var(--muted); padding: var(--s4) 0; }
+
+/* Скелетоны на время загрузки */
+.skel{ height: 18px; border-radius: 4px; background: var(--surface-2); animation: pulse 1.2s ease-in-out infinite; }
+.roster li .skel{ flex: 1; max-width: 60%; }
+@keyframes pulse{ 50%{ opacity: .45; } }
+
+/* ---------- Поля формы ---------- */
+.field{ display: grid; gap: var(--s2); margin-bottom: var(--s5); }
+.field > span{ font-size: 17px; color: var(--muted); }
+.code-input{ height: 72px; font: 600 40px/1 var(--f-display); letter-spacing: .3em; text-align: center; }
+.err{ color: var(--accent-text); font-size: 17px; }
+
+/* ---------- Экран игрока ---------- */
+.player{ display: flex; flex-direction: column; gap: var(--s4); }
+.hello{ color: var(--muted); font-size: 17px; }
+.hello b{ color: var(--text); font-weight: 650; }
+.banner{
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s4); border-radius: var(--r-md);
+  font-size: 20px; font-weight: 650;
+}
+.banner svg{ width: 28px; height: 28px; flex: none; }
+.banner.b-dead{ background: oklch(32% 0.005 60); color: var(--text); }
+.banner.b-mute{ background: var(--accent); color: var(--paper); }
+.wait{ padding: var(--s5) 0 var(--s2); }
+.wait h2{ font: 600 31px/1.15 var(--f-display); }
+.wait p{ color: var(--muted); margin-top: var(--s2); }
+.pl-game{ display: flex; flex-direction: column; gap: var(--s4); padding-top: var(--s2); }
+.pl-game .flip{ cursor: pointer; }
+.pl-game.dead .flip{ opacity: .6; }
+
+/* ---------- Модальное окно и тост ---------- */
+.modal{ position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center; background: rgb(8 6 5 / .7); }
+.sheet{
+  width: 100%; max-width: 520px;
+  padding: var(--s5) var(--s4) calc(env(safe-area-inset-bottom) + var(--s4));
+  background: var(--surface); border-top: 1px solid var(--line-2);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: 0 -10px 40px rgb(0 0 0 / .4);
+  display: grid; gap: var(--s3);
+}
+.sheet p{ font-size: 19px; margin-bottom: var(--s2); }
+
+.toast{
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 112px); z-index: 30;
+  transform: translate(-50%, 8px); opacity: 0; pointer-events: none;
+  max-width: calc(100vw - 32px); padding: var(--s3) var(--s4);
+  background: var(--paper); color: var(--ink); border-radius: var(--r-sm);
+  font-size: 16px; font-weight: 600; text-align: center;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .4);
+  transition: opacity var(--t-mid) var(--ease), transform var(--t-mid) var(--ease);
+}
+.toast.on{ opacity: 1; transform: translate(-50%, 0); }
+
+@media (prefers-reduced-motion: reduce){
+  .card-inner, .toast, .btn, .tog{ transition: none; }
+  .skel{ animation: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== СТАРТ ========== -->
+  <section id="s-home" class="screen">
+    <div class="home">
+      <div>
+        <svg class="home-mark" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2"><path d="M28 3 52 28 28 53 4 28z"/><path d="M28 12 43 28 28 44 13 28z" stroke-width="1.2"/></svg>
+        <h1>Мафия</h1>
+        <p class="lead">Раздача ролей и пульт ведущего для живой игры.</p>
+      </div>
+      <div class="stack">
+        <button class="choice" data-act="mode-local">
+          <span class="choice-t">Один телефон по кругу</span>
+          <span class="choice-s">Без интернета. Телефон передают из рук в руки.</span>
+        </button>
+        <button class="choice" data-act="mode-online">
+          <span class="choice-t">У каждого свой телефон</span>
+          <span class="choice-s">Комната по коду или QR. Нужен интернет.</span>
+        </button>
+      </div>
+      <div class="stack" id="resume"></div>
+      <p class="home-foot">Ведущий объявляет всё голосом. Приложение показывает роли и хранит статусы.</p>
+    </div>
+  </section>
+
+  <!-- ========== РЕЖИМ A: НАСТРОЙКА ========== -->
+  <section id="s-setup" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="back-home" aria-label="Назад" data-icon="back"></button>
+      <h2>Один телефон по кругу</h2>
+    </header>
+    <div class="content">
+      <div class="sec-head"><h3 class="sec-t">Игроки</h3></div>
+      <div class="count-row">
+        <span class="lbl">Сколько игроков</span>
+        <div class="stepper">
+          <button data-act="n-dec" aria-label="Меньше">−</button>
+          <output id="n-out">8</output>
+          <button data-act="n-inc" aria-label="Больше">+</button>
+        </div>
+      </div>
+      <ol class="names" id="names"></ol>
+
+      <div class="sec-head">
+        <h3 class="sec-t">Роли</h3>
+        <button class="btn small" data-act="auto" data-scope="local">Авто-расклад</button>
+      </div>
+      <ul class="roles" id="roles-local"></ul>
+    </div>
+    <div class="dock">
+      <p class="dock-msg" id="local-msg"></p>
+      <button class="btn primary big" id="deal-local" data-act="deal-local">Раздать роли</button>
+    </div>
+  </section>
+
+  <!-- ========== РЕЖИМ A: ПЕРЕДАЧА ТЕЛЕФОНА ========== -->
+  <section id="s-pass" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="pass-abort" aria-label="Прервать раздачу" data-icon="back"></button>
+      <h2>Раздача ролей</h2>
+      <span class="bar-side" id="pass-prog"></span>
+    </header>
+    <div class="pass">
+      <p class="pass-k">Теперь</p>
+      <p class="pass-name" id="pass-name"></p>
+      <div class="flip" id="pass-card" data-card></div>
+      <p class="hint" id="pass-hint"></p>
+    </div>
+    <div class="dock">
+      <button class="btn primary big" id="pass-btn" data-act="pass-btn">Показать роль</button>
+    </div>
+  </section>
+
+  <!-- ========== РЕЖИМ A: ПАНЕЛЬ ВЕДУЩЕГО ========== -->
+  <section id="s-local-panel" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="end-game" aria-label="Закончить игру" data-icon="back"></button>
+      <h2>Все роли розданы</h2>
+    </header>
+    <div class="content" id="panel-local"></div>
+  </section>
+
+  <!-- ========== РЕЖИМ B: ВЫБОР ========== -->
+  <section id="s-online" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="back-home" aria-label="Назад" data-icon="back"></button>
+      <h2>У каждого свой телефон</h2>
+    </header>
+    <div class="content">
+      <div class="stack" style="margin-top: var(--s4)">
+        <button class="choice accent" data-act="host-create" id="btn-create">
+          <span class="choice-t">Я ведущий</span>
+          <span class="choice-s">Создать комнату и раздать роли</span>
+        </button>
+        <button class="choice" data-act="go-join">
+          <span class="choice-t">Я игрок</span>
+          <span class="choice-s">Войти по коду комнаты</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== РЕЖИМ B: ВХОД ИГРОКА ========== -->
+  <section id="s-join" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="mode-online" aria-label="Назад" data-icon="back"></button>
+      <h2>Вход в комнату</h2>
+    </header>
+    <form class="content" id="join-form" autocomplete="off" novalidate>
+      <label class="field">
+        <span>Код комнаты</span>
+        <input class="input code-input" id="j-code" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000">
+      </label>
+      <label class="field">
+        <span>Твоё имя</span>
+        <input class="input" id="j-name" maxlength="20" placeholder="Как тебя называть" enterkeyhint="go">
+      </label>
+      <p class="err" id="j-err" hidden></p>
+    </form>
+    <div class="dock">
+      <button class="btn primary big" type="submit" form="join-form" id="j-btn">Войти</button>
+    </div>
+  </section>
+
+  <!-- ========== РЕЖИМ B: ЛОББИ ВЕДУЩЕГО ========== -->
+  <section id="s-host-lobby" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-icon="back"></button>
+      <h2>Лобби</h2>
+    </header>
+    <div class="content">
+      <div class="room">
+        <div>
+          <span class="k">Код комнаты</span>
+          <span class="code" id="h-code">····</span>
+        </div>
+        <div class="qr" id="h-qr" aria-label="QR-код со ссылкой на комнату"></div>
+        <p class="link" id="h-link"></p>
+      </div>
+      <div class="share-row">
+        <button class="btn" data-act="share-link">Поделиться</button>
+        <button class="btn" data-act="copy-link">Копировать</button>
+      </div>
+
+      <div class="sec-head"><h3 class="sec-t">Игроки</h3><span class="note" id="h-count"></span></div>
+      <ul class="roster" id="h-roster"></ul>
+
+      <div class="sec-head">
+        <h3 class="sec-t">Роли</h3>
+        <button class="btn small" data-act="auto" data-scope="host">Авто-расклад</button>
+      </div>
+      <ul class="roles" id="roles-host"></ul>
+
+      <div class="panel-actions">
+        <button class="btn danger" data-act="close-room">Закрыть комнату</button>
+      </div>
+    </div>
+    <div class="dock">
+      <p class="dock-msg" id="host-msg"></p>
+      <button class="btn primary big" id="deal-host" data-act="deal-host">Раздать роли</button>
+    </div>
+  </section>
+
+  <!-- ========== РЕЖИМ B: ПАНЕЛЬ ВЕДУЩЕГО ========== -->
+  <section id="s-host-game" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-icon="back"></button>
+      <h2 id="hg-title">Игра</h2>
+    </header>
+    <div class="content" id="panel-host"></div>
+  </section>
+
+  <!-- ========== РЕЖИМ B: ЭКРАН ИГРОКА ========== -->
+  <section id="s-player" class="screen" hidden>
+    <header class="bar">
+      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-icon="back"></button>
+      <h2 id="pl-title">Комната</h2>
+    </header>
+    <div class="content player">
+      <p class="hello" id="pl-hello"></p>
+      <div id="pl-banners" class="stack"></div>
+
+      <div id="pl-wait">
+        <div class="wait">
+          <h2 id="pl-wait-t">Ждём ведущего</h2>
+          <p id="pl-wait-s">Когда все соберутся, ведущий раздаст роли.</p>
+        </div>
+        <div class="sec-head"><h3 class="sec-t">В комнате</h3><span class="note" id="pl-count"></span></div>
+        <ul class="roster" id="pl-roster"></ul>
+        <div class="panel-actions">
+          <button class="btn ghost" data-act="pl-leave">Выйти из комнаты</button>
+        </div>
+      </div>
+
+      <div id="pl-game" class="pl-game" hidden>
+        <div class="flip" id="pl-card" data-card data-act="pl-card" role="button" tabindex="0" aria-label="Показать или скрыть роль"></div>
+        <p class="hint" id="pl-hint">Нажми, чтобы показать</p>
+      </div>
+
+      <div id="pl-gone" hidden>
+        <div class="wait">
+          <h2>Игра закончилась</h2>
+          <p id="pl-gone-s"></p>
+        </div>
+        <div class="panel-actions">
+          <button class="btn primary" data-act="go-join">Войти в другую комнату</button>
+          <button class="btn ghost" data-act="back-home">На главную</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Подтверждение действий -->
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true">
+    <p id="modal-text"></p>
+    <button class="btn primary" id="modal-ok">Да</button>
+    <button class="btn ghost" id="modal-cancel">Отмена</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   НАСТРОЙКИ
+   ===================================================================== */
+const SB_URL = 'https://dbkqhbppiyinhwsbspce.supabase.co';
+const SB_KEY = 'sb_publishable_OWuSbJBfA-8p49WLwEVHFg_TpPT4Vkp';
+const SB_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+const QR_CDN = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+
+const MIN_P = 4, MAX_P = 20;
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FLIP_MS = REDUCED ? 0 : 520;          // совпадает с --t-flip
+const STALE_ROOM_MS = 12 * 3600 * 1000;      // комнату старше 12 ч можно занять заново
+
+/* =====================================================================
+   ИКОНКИ (inline SVG, рисуются цветом текста)
+   ===================================================================== */
+const svg = (body, vb = '0 0 24 24') =>
+  `<svg viewBox="${vb}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+
+const ICON = {
+  mafia:   svg('<path d="M2.5 16.2c2.6 1.7 5.9 2.6 9.5 2.6s6.9-.9 9.5-2.6"/><path d="M5.8 15.6 7.2 8.4c.3-1.6 1.8-2.5 3.3-1.9 1 .4 2 .4 3 0 1.5-.6 3 .3 3.3 1.9l1.4 7.2"/><path d="M6.4 12.6c3.6 1.3 7.6 1.3 11.2 0"/>'),
+  don:     svg('<path d="M4 17.5 3 7.5l5 4 4-6.5 4 6.5 5-4-1 10z"/><path d="M5 20.5h14"/>'),
+  sheriff: svg('<path d="m12 2.8 2.7 5.5 6 .9-4.4 4.2 1 6L12 16.6l-5.4 2.8 1-6-4.3-4.2 6-.9z"/><circle cx="12" cy="11.6" r="1.8"/>'),
+  doctor:  svg('<path d="M9.5 3.5h5v6h6v5h-6v6h-5v-6h-6v-5h6z"/>'),
+  lover:   svg('<path d="M12 20.5s-8-4.8-8-10.6A4.4 4.4 0 0 1 12 7.3a4.4 4.4 0 0 1 8 2.6c0 5.8-8 10.6-8 10.6z"/>'),
+  maniac:  svg('<path d="M6.5 15.5 20.5 3.5c-.5 5-4.6 10.3-11.4 15z"/><path d="M5 14l5 5"/><path d="M7.5 16.5 3 21"/>'),
+  civilian:svg('<path d="M3.5 11 12 3.8l8.5 7.2"/><path d="M5.8 9.2V20h12.4V9.2"/><path d="M10 20v-5.5h4V20"/>'),
+  skull:   svg('<path d="M12 3a7.5 7.5 0 0 0-4.5 13.5V20h9v-3.5A7.5 7.5 0 0 0 12 3z"/><circle cx="9.3" cy="11" r="1.5"/><circle cx="14.7" cy="11" r="1.5"/><path d="M10.6 20v-2.2M13.4 20v-2.2"/>'),
+  micOff:  svg('<path d="M9 9.2V6a3 3 0 0 1 5.6-1.5"/><path d="M15 9.5V11a3 3 0 0 1-4.5 2.6"/><path d="M5.5 11a6.5 6.5 0 0 0 10.4 5.2"/><path d="M18.5 11c0 .9-.2 1.8-.5 2.6"/><path d="M12 17.5V21"/><path d="m3 3 18 18"/>'),
+  mic:     svg('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/>'),
+  eye:     svg('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+  eyeOff:  svg('<path d="M10.6 5.1A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.6 3.4M6.5 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m3 3 18 18"/>'),
+  back:    svg('<path d="M15 5 8 12l7 7"/>'),
+  close:   svg('<path d="M6 6l12 12M18 6 6 18"/>'),
+};
+
+/* Рубашка карты: одинаковая для всех ролей */
+const CARD_BACK = `<svg viewBox="0 0 250 350" aria-hidden="true">
+  <rect x="12" y="12" width="226" height="326" rx="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+  <rect x="20" y="20" width="210" height="310" rx="6" fill="none" stroke="currentColor" stroke-width="1"/>
+  <path class="em" d="M125 95 185 175 125 255 65 175z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+  <path class="em" d="M125 115 170 175 125 235 80 175z" fill="none" stroke="currentColor" stroke-width="1"/>
+  <text class="mono" x="125" y="193" text-anchor="middle" font-size="52">М</text>
+  <path d="M125 34l8 10-8 10-8-10zM125 296l8 10-8 10-8-10z" fill="none" stroke="currentColor" stroke-width="1.2"/>
+</svg>`;
+
+/* =====================================================================
+   РОЛИ
+   ===================================================================== */
+const ROLES = {
+  mafia:    { name: 'Мафия',         team: 'mafia', max: MAX_P, desc: 'Ночью вместе с мафией выбираешь, кого убить. Днём притворяйся мирным.' },
+  don:      { name: 'Дон',           team: 'mafia', max: 1,     desc: 'Глава мафии. Ночью убиваешь вместе со своими и ищешь Комиссара.' },
+  sheriff:  { name: 'Комиссар',      team: 'town',  max: MAX_P, desc: 'Ночью проверяешь одного игрока: мафия он или нет.' },
+  doctor:   { name: 'Доктор',        team: 'town',  max: MAX_P, desc: 'Ночью лечишь одного игрока. Если его пытались убить, он выживет.' },
+  lover:    { name: 'Любовница',     team: 'town',  max: MAX_P, desc: 'Ночью навещаешь одного игрока. Этой ночью он не может сделать свой ход.' },
+  maniac:   { name: 'Маньяк',        team: 'solo',  max: MAX_P, desc: 'Играешь сам за себя. Ночью убиваешь одного игрока. Победа, если останешься последним.' },
+  civilian: { name: 'Мирный житель', team: 'town',  max: MAX_P, desc: 'Ночью спишь. Днём ищешь мафию и голосуешь против неё.' },
+};
+const SPECIALS = ['mafia', 'don', 'sheriff', 'doctor', 'lover', 'maniac'];   // мирные считаются сами
+const TEAM_LABEL = { mafia: 'Команда мафии', town: 'Мирные', solo: 'Сам за себя' };
+const roleOf = key => ROLES[key] || null;
+
+/* Авто-расклад: примерно 1 мафия на 3–4 игрока, Дон с 7 игроков,
+   Комиссар всегда, Доктор с 5, Любовница с 10, Маньяк с 12. */
+function autoCounts(n) {
+  n = Math.max(n, MIN_P);
+  const m = Math.max(1, Math.round(n / 3.5));
+  const c = { mafia: m, don: 0, sheriff: 1, doctor: 0, lover: 0, maniac: 0 };
+  if (n >= 7 && m >= 2) { c.don = 1; c.mafia = m - 1; }
+  if (n >= 5)  c.doctor = 1;
+  if (n >= 10) c.lover = 1;
+  if (n >= 12) c.maniac = 1;
+  return c;
+}
+
+const sumSpecials = c => SPECIALS.reduce((s, k) => s + (c[k] || 0), 0);
+
+/* Проверка расклада. Возвращает { ok, civ, msg } */
+function checkRoles(c, n) {
+  const civ = n - sumSpecials(c);
+  const maf = c.mafia + c.don;
+  if (n < MIN_P) return { ok: false, civ: Math.max(0, civ), msg: `Не хватает игроков: ${MIN_P - n}. Нужно минимум ${MIN_P}.` };
+  if (civ < 0)   return { ok: false, civ: 0, msg: `Ролей больше, чем игроков. Убери ${-civ}.` };
+  if (maf === 0) return { ok: false, civ, msg: 'Добавь хотя бы одну мафию.' };
+  if (maf * 2 >= n) return { ok: false, civ, msg: 'Мафии должно быть меньше половины игроков.' };
+  return { ok: true, civ, msg: `${n} ${plural(n, 'роль', 'роли', 'ролей')} на ${n} ${plural(n, 'игрока', 'игрока', 'игроков')}` };
+}
+
+/* Колода ролей под расклад, перемешанная Фишером–Йетсом */
+function buildDeck(c, n) {
+  const deck = [];
+  SPECIALS.forEach(k => { for (let i = 0; i < c[k]; i++) deck.push(k); });
+  while (deck.length < n) deck.push('civilian');
+  return shuffle(deck);
+}
+
+/* =====================================================================
+   УТИЛИТЫ
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+/* Честный случайный индекс 0..n-1 (crypto + отбрасывание хвоста против перекоса) */
+function randInt(n) {
+  const buf = new Uint32Array(1), limit = Math.floor(0x100000000 / n) * n;
+  do crypto.getRandomValues(buf); while (buf[0] >= limit);
+  return buf[0] % n;
+}
+/* Fisher–Yates */
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+function debounce(fn, ms) { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+
+const scripts = {};
+function loadScript(src) {
+  return scripts[src] ||= new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = res;
+    s.onerror = () => { delete scripts[src]; s.remove(); rej(new Error('Не загрузился ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+
+/* Переключение экранов */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.hidden = s.id !== id; });
+  state.screen = id;
+  window.scrollTo(0, 0);
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 2800);
+}
+
+/* Подтверждение в нижней шторке. Возвращает Promise<boolean> */
+function ask(text, okLabel = 'Да', danger = false) {
+  return new Promise(resolve => {
+    const m = $('#modal'), ok = $('#modal-ok'), no = $('#modal-cancel');
+    $('#modal-text').textContent = text;
+    ok.textContent = okLabel;
+    ok.className = 'btn ' + (danger ? 'danger-fill' : 'primary');
+    m.hidden = false;
+    const done = v => { m.hidden = true; ok.onclick = no.onclick = m.onclick = null; resolve(v); };
+    ok.onclick = () => done(true);
+    no.onclick = () => done(false);
+    m.onclick = e => { if (e.target === m) done(false); };
+  });
+}
+
+/* =====================================================================
+   КАРТА РОЛИ
+   Лицевая сторона заполняется только в момент показа и очищается сразу
+   после того, как карта перевернулась обратно. Пока роль скрыта,
+   в DOM нет ни названия, ни цвета, ни иконки.
+   ===================================================================== */
+function makeCard(root) {
+  root.innerHTML = `<div class="card-inner"><div class="face back">${CARD_BACK}</div><div class="face front"></div></div>`;
+  const front = root.querySelector('.front');
+  let timer = null;
+  const clear = () => { front.className = 'face front'; front.innerHTML = ''; };
+  return {
+    shown: false,
+    show(roleKey) {
+      const r = roleOf(roleKey); if (!r) return Promise.resolve();
+      clearTimeout(timer);
+      front.className = 'face front t-' + r.team;
+      front.innerHTML = `
+        <span class="f-team">${TEAM_LABEL[r.team]}</span>
+        <div class="f-icon">${ICON[roleKey]}</div>
+        <h3 class="f-name">${r.name}</h3>
+        <p class="f-desc">${r.desc}</p>`;
+      // двойной rAF: браузер сначала рисует содержимое, затем запускает поворот
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add('is-flipped')));
+      this.shown = true;
+      return wait(FLIP_MS + 40);
+    },
+    hide() {
+      root.classList.remove('is-flipped');
+      this.shown = false;
+      return new Promise(r => { clearTimeout(timer); timer = setTimeout(() => { clear(); r(); }, FLIP_MS + 20); });
+    },
+    reset() { clearTimeout(timer); root.classList.remove('is-flipped'); clear(); this.shown = false; },
+  };
+}
+
+/* =====================================================================
+   СОСТОЯНИЕ
+   ===================================================================== */
+const state = {
+  mode: null,          // 'local' | 'host' | 'player'
+  screen: 's-home',
+  local: {
+    n: 8, names: [], counts: autoCounts(8), touched: false,
+    players: [], idx: 0, phase: 'ready', busy: false, inGame: false, rolesHidden: false,
+  },
+  host: {
+    code: null, status: 'lobby', players: [], loaded: false,
+    counts: autoCounts(MIN_P), touched: false, ch: null, busy: false, rolesHidden: false,
+  },
+  pl: { id: null, code: null, me: null, status: null, roster: [], ch: null, lastRole: null, busy: false },
+};
+const L = state.local, H = state.host, P = state.pl;
+let passCard, plCard;
+
+/* =====================================================================
+   РЕДАКТОР РОЛЕЙ (общий для обоих режимов)
+   ===================================================================== */
+const ctxOf = scope => scope === 'local' ? L : H;
+const countOf = scope => scope === 'local' ? L.n : H.players.length;
+
+function renderRoles(scope) {
+  const ctx = ctxOf(scope), n = countOf(scope), c = ctx.counts;
+  const chk = checkRoles(c, n);
+  const full = sumSpecials(c) >= n;
+
+  const rows = SPECIALS.map(k => {
+    const r = ROLES[k];
+    const canInc = c[k] < r.max && !full;
+    return `<li>
+      <span class="ri t-${r.team}">${ICON[k]}</span>
+      <span class="rn">${r.name}</span>
+      <div class="stepper">
+        <button data-act="role-dec" data-role="${k}" data-scope="${scope}" aria-label="Меньше: ${r.name}" ${c[k] <= 0 ? 'disabled' : ''}>−</button>
+        <output>${c[k]}</output>
+        <button data-act="role-inc" data-role="${k}" data-scope="${scope}" aria-label="Больше: ${r.name}" ${canInc ? '' : 'disabled'}>+</button>
+      </div>
+    </li>`;
+  }).join('');
+
+  $('#roles-' + scope).innerHTML = rows + `<li>
+      <span class="ri t-town">${ICON.civilian}</span>
+      <span class="rn">Мирный житель<small>все остальные</small></span>
+      <output class="civ-n">${chk.civ}</output>
+    </li>`;
+
+  const msg = $(`#${scope}-msg`);
+  msg.textContent = chk.msg;
+  msg.classList.toggle('err', !chk.ok);
+  $('#deal-' + scope).disabled = !chk.ok || (scope === 'host' && H.busy);
+}
+
+/* =====================================================================
+   ПАНЕЛЬ ВЕДУЩЕГО (общая для обоих режимов)
+   ===================================================================== */
+function renderPanel() {
+  const local = state.mode === 'local';
+  const ctx = local ? L : H;
+  const players = ctx.players;
+  const el = $(local ? '#panel-local' : '#panel-host');
+
+  // Счётчик живых по командам
+  const alive = players.filter(p => p.alive && roleOf(p.role));
+  const cnt = team => alive.filter(p => roleOf(p.role).team === team).length;
+  const maf = cnt('mafia'), town = cnt('town'), solo = cnt('solo');
+  const hasSolo = players.some(p => roleOf(p.role)?.team === 'solo');
+
+  let note = '';
+  if (players.some(p => p.role)) {
+    if (maf === 0 && solo === 0) note = 'Мафия выбыла. Мирные победили.';
+    else if (maf === 0 && solo > 0 && solo >= town) note = 'Остался Маньяк против мирных.';
+    else if (maf > 0 && maf >= town + solo) note = 'Мафии не меньше, чем остальных. Мафия победила.';
+  }
+
+  const rows = players.map(p => {
+    const r = roleOf(p.role);
+    const roleHTML = ctx.rolesHidden
+      ? `<span class="p-role">роль скрыта</span>`
+      : r ? `<span class="p-role t-${r.team}">${ICON[p.role]}${r.name}</span>`
+          : `<span class="p-role">без роли</span>`;
+    return `<li class="${p.alive ? '' : 'dead'}">
+      <div class="p-main"><span class="p-name">${esc(p.name)}</span>${roleHTML}</div>
+      <button class="tog tog-dead" data-act="tog" data-field="alive" data-id="${esc(p.id)}" aria-pressed="${!p.alive}">${ICON.skull}<span>Убит</span></button>
+      <button class="tog tog-mute" data-act="tog" data-field="muted" data-id="${esc(p.id)}" aria-pressed="${!!p.muted}">${ICON.micOff}<span>Молчит</span></button>
+    </li>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="tally">
+      <div class="tally-i mafia"><span class="tally-n">${maf}</span><span class="tally-l">${plural(maf, 'мафия', 'мафии', 'мафии')}</span></div>
+      <div class="tally-i"><span class="tally-n">${town}</span><span class="tally-l">${plural(town, 'мирный', 'мирных', 'мирных')}</span></div>
+      ${hasSolo ? `<div class="tally-i"><span class="tally-n">${solo}</span><span class="tally-l">маньяк</span></div>` : ''}
+    </div>
+    ${note ? `<p class="tally-note">${note}</p>` : ''}
+    <div class="list-head">
+      <span>Живы ${alive.length} из ${players.length}</span>
+      <button class="btn small ghost" data-act="toggle-roles">${ctx.rolesHidden ? ICON.eye + 'Показать роли' : ICON.eyeOff + 'Скрыть роли'}</button>
+    </div>
+    <ul class="plist">${rows || '<li class="empty">Игроков нет</li>'}</ul>
+    <div class="panel-actions">
+      <button class="btn" data-act="all-speak">${ICON.mic}Все могут говорить</button>
+      <button class="btn" data-act="new-game">Новая игра с теми же игроками</button>
+      <button class="btn danger" data-act="end-game">Закончить игру</button>
+    </div>`;
+}
+
+/* =====================================================================
+   РЕЖИМ A: ОДИН ТЕЛЕФОН ПО КРУГУ (всё в памяти, без сети)
+   ===================================================================== */
+function openLocalSetup() {
+  state.mode = 'local';
+  if (!L.names.length) {
+    const saved = store.get('mafia_names');   // сохраняем только имена, не роли
+    L.names = Array.isArray(saved) && saved.length >= MIN_P ? saved.slice(0, MAX_P) : Array(8).fill('');
+    L.n = L.names.length;
+    L.counts = autoCounts(L.n);
+  }
+  renderNames();
+  renderRoles('local');
+  show('s-setup');
+}
+
+function renderNames() {
+  $('#n-out').textContent = L.n;
+  $('[data-act="n-dec"]').disabled = L.n <= MIN_P;
+  $('[data-act="n-inc"]').disabled = L.n >= MAX_P;
+  $('#names').innerHTML = L.names.map((nm, i) => `<li>
+      <span class="num">${i + 1}</span>
+      <input class="input" data-i="${i}" maxlength="20" value="${esc(nm)}" placeholder="Игрок ${i + 1}" enterkeyhint="${i < L.n - 1 ? 'next' : 'done'}" autocomplete="off">
+    </li>`).join('');
+}
+
+function setN(n) {
+  L.n = Math.min(MAX_P, Math.max(MIN_P, n));
+  while (L.names.length < L.n) L.names.push('');
+  L.names.length = L.n;
+  if (!L.touched) L.counts = autoCounts(L.n);
+  store.set('mafia_names', L.names);
+  renderNames();
+  renderRoles('local');
+}
+
+function startLocalDeal() {
+  const chk = checkRoles(L.counts, L.n);
+  if (!chk.ok) return toast(chk.msg);
+  const deck = buildDeck(L.counts, L.n);
+  L.players = L.names.map((nm, i) => ({
+    id: String(i), name: nm.trim() || `Игрок ${i + 1}`, role: deck[i], alive: true, muted: false,
+  }));
+  L.idx = 0; L.phase = 'ready'; L.inGame = true; L.rolesHidden = false;
+  passCard.reset();
+  renderPass();
+  show('s-pass');
+}
+
+function renderPass() {
+  const p = L.players[L.idx], next = L.players[L.idx + 1];
+  const btn = $('#pass-btn'), hint = $('#pass-hint');
+  $('#pass-name').textContent = p.name;
+  $('#pass-prog').textContent = `${L.idx + 1} из ${L.players.length}`;
+
+  if (L.phase === 'ready') {
+    btn.textContent = 'Показать роль';
+    btn.className = 'btn primary big';
+    hint.textContent = 'Проверь, что экран видишь только ты.';
+  } else if (L.phase === 'shown') {
+    btn.textContent = 'Скрыть';
+    btn.className = 'btn light big';
+    hint.textContent = 'Запомни роль и нажми «Скрыть».';
+  } else {
+    btn.textContent = next ? `Дальше: ${next.name}` : 'Все роли розданы';
+    btn.className = 'btn primary big';
+    hint.textContent = next ? `Роль скрыта. Передай телефон: ${next.name}.` : 'Роль скрыта. Верни телефон ведущему.';
+  }
+}
+
+/* Одна кнопка ведёт по циклу: показать → скрыть → дальше */
+async function onPassBtn() {
+  if (L.busy) return;
+  const btn = $('#pass-btn');
+  L.busy = true; btn.disabled = true;
+  try {
+    if (L.phase === 'ready') {
+      await passCard.show(L.players[L.idx].role);
+      L.phase = 'shown';
+    } else if (L.phase === 'shown') {
+      await passCard.hide();          // «Дальше» появится только после полного скрытия
+      L.phase = 'hidden';
+    } else if (L.idx < L.players.length - 1) {
+      L.idx++; L.phase = 'ready';
+    } else {
+      renderPanel();
+      show('s-local-panel');
+      return;
+    }
+    renderPass();
+  } finally {
+    L.busy = false; btn.disabled = false;
+  }
+}
+
+/* =====================================================================
+   SUPABASE
+   ===================================================================== */
+let sb = null;
+async function getSb() {
+  if (sb) return sb;
+  await loadScript(SB_CDN);
+  sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
+  return sb;
+}
+
+/* Подписка: при любом изменении в базе вызывается onChange.
+   После подключения (и переподключения) тоже, чтобы ничего не пропустить. */
+function subscribe(name, specs, onChange) {
+  const ch = sb.channel(name + '-' + Date.now());
+  specs.forEach(spec => ch.on('postgres_changes', { schema: 'public', ...spec }, onChange));
+  ch.subscribe(status => { if (status === 'SUBSCRIBED') onChange(); });
+  return ch;
+}
+function unsubscribe(ctx) {
+  if (ctx.ch && sb) sb.removeChannel(ctx.ch);
+  ctx.ch = null;
+}
+
+const roomLink = code => `${location.origin}${location.pathname}?room=${code}`;
+const setUrl = code => history.replaceState(null, '', code ? `?room=${code}` : location.pathname);
+
+/* =====================================================================
+   РЕЖИМ B: ВЕДУЩИЙ
+   ===================================================================== */
+async function hostCreate() {
+  const btn = $('#btn-create');
+  btn.disabled = true;
+  try {
+    await getSb();
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const code = String(1000 + randInt(9000));
+      let { error } = await sb.from('mafia_rooms').insert({ code, status: 'lobby' });
+      if (!error) return openHost(code, true);
+      if (error.code !== '23505') throw error;           // 23505: такой код уже занят
+
+      // Код занят. Если комната закрыта или давно брошена, освобождаем её.
+      const { data } = await sb.from('mafia_rooms').select('status,created_at').eq('code', code).maybeSingle();
+      if (data && (data.status === 'closed' || Date.now() - new Date(data.created_at) > STALE_ROOM_MS)) {
+        await sb.from('mafia_players').delete().eq('room_code', code);
+        await sb.from('mafia_rooms').delete().eq('code', code);
+        ({ error } = await sb.from('mafia_rooms').insert({ code, status: 'lobby' }));
+        if (!error) return openHost(code, true);
+      }
+    }
+    toast('Не удалось подобрать свободный код. Попробуй ещё раз.');
+  } catch (e) {
+    console.error(e);
+    toast('Нет связи с сервером. Проверь интернет.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function openHost(code, fresh = false) {
+  try { await getSb(); } catch { return toast('Нет связи с сервером. Проверь интернет.'); }
+  state.mode = 'host';
+  Object.assign(H, { code, status: 'lobby', players: [], loaded: false, busy: false, rolesHidden: false });
+  if (fresh) { H.counts = autoCounts(MIN_P); H.touched = false; }
+  store.set('mafia_host', { room: code });
+  setUrl(null);
+
+  $('#h-code').textContent = code;
+  $('#hg-title').textContent = `Комната ${code}`;
+  const link = roomLink(code);
+  $('#h-link').textContent = location.protocol === 'file:' ? 'Ссылка и QR заработают, когда сайт будет опубликован.' : link;
+  renderQR(link);
+  renderLobby();
+  show('s-host-lobby');
+
+  unsubscribe(H);
+  const soon = debounce(hostSync, 150);
+  H.ch = subscribe('host-' + code, [
+    { event: '*', table: 'mafia_players', filter: `room_code=eq.${code}` },
+    { event: 'DELETE', table: 'mafia_players' },          // DELETE не фильтруется по полям, ловим все
+    { event: '*', table: 'mafia_rooms', filter: `code=eq.${code}` },
+  ], soon);
+}
+
+async function renderQR(link) {
+  const box = $('#h-qr');
+  box.innerHTML = '<div class="skel" style="height:100%"></div>';
+  try {
+    await loadScript(QR_CDN);
+    const qr = qrcode(0, 'M');
+    qr.addData(link);
+    qr.make();
+    box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  } catch { box.hidden = true; }
+}
+
+/* Перечитать комнату и игроков из базы и перерисовать нужный экран */
+async function hostSync() {
+  if (state.mode !== 'host' || !H.code) return;
+  const code = H.code;
+  const [room, list] = await Promise.all([
+    sb.from('mafia_rooms').select('status').eq('code', code).maybeSingle(),
+    sb.from('mafia_players').select('id,name,role,alive,muted,created_at').eq('room_code', code).order('created_at'),
+  ]);
+  if (state.mode !== 'host' || H.code !== code) return;
+  if (room.error || list.error) return toast('Нет связи с сервером');
+  if (!room.data || room.data.status === 'closed') {
+    store.del('mafia_host');
+    toast('Комната закрыта');
+    return goHome();
+  }
+  H.status = room.data.status;
+  H.players = list.data;
+  H.loaded = true;
+  if (!H.touched) H.counts = autoCounts(H.players.length);
+
+  if (H.status === 'lobby') {
+    if (state.screen !== 's-host-lobby') show('s-host-lobby');
+    renderLobby();
+  } else {
+    if (state.screen !== 's-host-game') show('s-host-game');
+    renderPanel();
+  }
+}
+
+function renderLobby() {
+  const n = H.players.length;
+  $('#h-count').textContent = H.loaded ? `${n} ${plural(n, 'человек', 'человека', 'человек')}` : '';
+  $('#h-roster').innerHTML = !H.loaded
+    ? '<li><span class="skel"></span></li><li><span class="skel"></span></li><li><span class="skel"></span></li>'
+    : n === 0
+      ? '<li class="empty">Пока никого. Покажи игрокам код или QR.</li>'
+      : H.players.map((p, i) => `<li>
+          <span class="num">${i + 1}</span>
+          <span class="nm">${esc(p.name)}</span>
+          <button class="icon-btn" data-act="kick" data-id="${esc(p.id)}" aria-label="Убрать ${esc(p.name)}">${ICON.close}</button>
+        </li>`).join('');
+  renderRoles('host');
+}
+
+/* Раздать роли всем, кто в комнате (и для «Новой игры» тоже) */
+async function hostDeal() {
+  if (H.busy) return;
+  H.busy = true;
+  $('#deal-host').disabled = true;
+  try {
+    const { data: players, error } = await sb.from('mafia_players').select('id').eq('room_code', H.code).order('created_at');
+    if (error) throw error;
+    const chk = checkRoles(H.counts, players.length);
+    if (!chk.ok) { toast(chk.msg); return false; }
+
+    const deck = buildDeck(H.counts, players.length);
+    await sb.from('mafia_rooms').update({ status: 'dealing' }).eq('code', H.code);
+    const res = await Promise.all(players.map((p, i) =>
+      sb.from('mafia_players').update({ role: deck[i], alive: true, muted: false }).eq('id', p.id)));
+    if (res.some(r => r.error)) throw res.find(r => r.error).error;
+    const up = await sb.from('mafia_rooms').update({ status: 'started' }).eq('code', H.code);
+    if (up.error) throw up.error;
+    H.rolesHidden = false;
+    return true;
+  } catch (e) {
+    console.error(e);
+    toast('Не получилось раздать роли. Попробуй ещё раз.');
+    return false;
+  } finally {
+    H.busy = false;
+    await hostSync();
+  }
+}
+
+/* Вернуть всех в лобби: роли стираются, статусы сбрасываются */
+async function hostToLobby() {
+  const a = await sb.from('mafia_players').update({ role: null, alive: true, muted: false }).eq('room_code', H.code);
+  const b = await sb.from('mafia_rooms').update({ status: 'lobby' }).eq('code', H.code);
+  if (a.error || b.error) toast('Нет связи с сервером');
+  hostSync();
+}
+
+async function hostUpdate(query) {
+  const { error } = await query;
+  if (error) { toast('Не сохранилось. Проверь интернет.'); hostSync(); }
+}
+
+/* =====================================================================
+   РЕЖИМ B: ИГРОК
+   ===================================================================== */
+function openJoin(code = '') {
+  $('#j-code').value = code || '';
+  $('#j-name').value = store.get('mafia_myname') || '';
+  $('#j-err').hidden = true;
+  show('s-join');
+  setTimeout(() => (code ? $('#j-name') : $('#j-code')).focus(), 50);
+}
+
+async function onJoinSubmit(e) {
+  e.preventDefault();
+  const code = $('#j-code').value.replace(/\D/g, '');
+  const name = $('#j-name').value.trim();
+  const err = msg => { const el = $('#j-err'); el.textContent = msg; el.hidden = !msg; };
+  if (code.length !== 4) return err('Код комнаты: 4 цифры.');
+  if (!name) return err('Напиши своё имя.');
+  err('');
+  const btn = $('#j-btn');
+  btn.disabled = true;
+  try {
+    await getSb();
+    const { data: room, error } = await sb.from('mafia_rooms').select('status').eq('code', code).maybeSingle();
+    if (error) throw error;
+    if (!room) return err('Комнаты с таким кодом нет. Проверь цифры.');
+    if (room.status === 'closed') return err('Эта комната уже закрыта.');
+    const { data: me, error: e2 } = await sb.from('mafia_players').insert({ room_code: code, name }).select('id').single();
+    if (e2) throw e2;
+    store.set('mafia_myname', name);
+    store.set('mafia_player', { id: me.id, room: code });
+    openPlayer(me.id, code);
+  } catch (ex) {
+    console.error(ex);
+    err('Нет связи с сервером. Проверь интернет.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function openPlayer(id, code) {
+  try { await getSb(); } catch { renderHome(); return toast('Нет связи с сервером. Проверь интернет.'); }
+  state.mode = 'player';
+  Object.assign(P, { id, code, me: null, status: null, roster: [], lastRole: null, busy: false });
+  plCard.reset();
+  setUrl(code);
+  $('#pl-title').textContent = `Комната ${code}`;
+  $('#pl-hello').textContent = '';
+  $('#pl-banners').innerHTML = '';
+  $('#pl-wait').hidden = false; $('#pl-game').hidden = true; $('#pl-gone').hidden = true;
+  $('#pl-roster').innerHTML = '<li><span class="skel"></span></li><li><span class="skel"></span></li>';
+  show('s-player');
+
+  unsubscribe(P);
+  const soon = debounce(plSync, 150);
+  P.ch = subscribe('player-' + id, [
+    { event: '*', table: 'mafia_players', filter: `room_code=eq.${code}` },
+    { event: 'DELETE', table: 'mafia_players' },
+    { event: '*', table: 'mafia_rooms', filter: `code=eq.${code}` },
+  ], soon);
+}
+
+async function plSync() {
+  if (state.mode !== 'player' || !P.id) return;
+  const { id, code } = P;
+  const [room, me, list] = await Promise.all([
+    sb.from('mafia_rooms').select('status').eq('code', code).maybeSingle(),
+    sb.from('mafia_players').select('id,name,role,alive,muted').eq('id', id).maybeSingle(),
+    sb.from('mafia_players').select('id,name').eq('room_code', code).order('created_at'),
+  ]);
+  if (state.mode !== 'player' || P.id !== id) return;
+  if (room.error || me.error || list.error) return toast('Нет связи с сервером');
+  if (!room.data || room.data.status === 'closed') return plGone('Ведущий закрыл комнату.');
+  if (!me.data) return plGone('Тебя нет в этой комнате. Возможно, ведущий убрал тебя из списка.');
+
+  P.me = me.data;
+  P.status = room.data.status;
+  P.roster = list.data;
+
+  // Роль сменилась (новая раздача или возврат в лобби): карту закрываем
+  const role = P.status === 'started' ? P.me.role : null;
+  if (role !== P.lastRole) {
+    if (P.lastRole && role) toast('Новая раздача');
+    plCard.reset();
+    P.lastRole = role;
+  }
+  renderPlayer();
+}
+
+function renderPlayer() {
+  const me = P.me;
+  const inGame = P.status === 'started' && roleOf(me.role);
+  $('#pl-hello').innerHTML = `Ты: <b>${esc(me.name)}</b>`;
+
+  // Плашки статуса
+  let b = '';
+  if (inGame && !me.alive) b += `<div class="banner b-dead">${ICON.skull}Ты убит</div>`;
+  if (inGame && me.muted)  b += `<div class="banner b-mute">${ICON.micOff}Тебе нельзя говорить</div>`;
+  $('#pl-banners').innerHTML = b;
+
+  $('#pl-gone').hidden = true;
+  $('#pl-wait').hidden = !!inGame;
+  $('#pl-game').hidden = !inGame;
+
+  if (inGame) {
+    $('#pl-game').classList.toggle('dead', !me.alive);
+    $('#pl-hint').textContent = plCard.shown ? 'Нажми ещё раз, чтобы скрыть' : 'Нажми, чтобы показать';
+    return;
+  }
+
+  const [t, s] =
+    P.status === 'dealing' ? ['Раздаём роли', 'Сейчас появится твоя карта.'] :
+    P.status === 'started' ? ['Игра уже идёт', 'Ты в комнате. Роль придёт со следующей раздачей.'] :
+                             ['Ждём ведущего', 'Когда все соберутся, ведущий раздаст роли.'];
+  $('#pl-wait-t').textContent = t;
+  $('#pl-wait-s').textContent = s;
+  const n = P.roster.length;
+  $('#pl-count').textContent = `${n} ${plural(n, 'человек', 'человека', 'человек')}`;
+  $('#pl-roster').innerHTML = P.roster.map((p, i) =>
+    `<li><span class="num">${i + 1}</span><span class="nm ${p.id === me.id ? 'me' : ''}">${esc(p.name)}${p.id === me.id ? ' (ты)' : ''}</span></li>`).join('');
+}
+
+function plGone(msg) {
+  unsubscribe(P);
+  store.del('mafia_player');
+  P.id = null;
+  plCard.reset();
+  $('#pl-banners').innerHTML = '';
+  $('#pl-wait').hidden = true; $('#pl-game').hidden = true; $('#pl-gone').hidden = false;
+  $('#pl-gone-s').textContent = msg;
+  setUrl(null);
+  if (state.screen !== 's-player') show('s-player');
+}
+
+async function onPlayerCard() {
+  if (P.busy || !P.me || !roleOf(P.me.role) || P.status !== 'started') return;
+  P.busy = true;
+  if (plCard.shown) await plCard.hide(); else await plCard.show(P.me.role);
+  P.busy = false;
+  $('#pl-hint').textContent = plCard.shown ? 'Нажми ещё раз, чтобы скрыть' : 'Нажми, чтобы показать';
+}
+
+/* =====================================================================
+   НАВИГАЦИЯ
+   ===================================================================== */
+function goHome() {
+  unsubscribe(H);
+  unsubscribe(P);
+  passCard.reset();
+  plCard.reset();
+  L.inGame = false;
+  state.mode = null;
+  setUrl(null);
+  renderHome();
+  show('s-home');
+}
+
+/* На главной показываем «вернуться», если есть незаконченная онлайн-игра */
+function renderHome() {
+  const h = store.get('mafia_host'), p = store.get('mafia_player');
+  let html = '';
+  if (h?.room) html += `<button class="btn" data-act="resume-host">Вернуться в комнату ${esc(h.room)} (ведущий)</button>`;
+  if (p?.room) html += `<button class="btn" data-act="resume-player">Вернуться в комнату ${esc(p.room)} (игрок)</button>`;
+  $('#resume').innerHTML = html;
+}
+
+/* =====================================================================
+   ДЕЙСТВИЯ ПО КНОПКАМ (одно делегирование на весь документ)
+   ===================================================================== */
+const actions = {
+  'mode-local':  () => openLocalSetup(),
+  'mode-online': () => show('s-online'),
+  'back-home':   () => goHome(),
+  'go-join':     () => openJoin(),
+  'host-create': () => hostCreate(),
+  'resume-host':   () => { const h = store.get('mafia_host'); if (h?.room) openHost(h.room); },
+  'resume-player': () => { const p = store.get('mafia_player'); if (p?.id) openPlayer(p.id, p.room); },
+
+  // Настройка
+  'n-dec': () => setN(L.n - 1),
+  'n-inc': () => setN(L.n + 1),
+  'role-inc': b => { const c = ctxOf(b.dataset.scope); c.counts[b.dataset.role]++; c.touched = true; renderRoles(b.dataset.scope); },
+  'role-dec': b => { const c = ctxOf(b.dataset.scope); c.counts[b.dataset.role] = Math.max(0, c.counts[b.dataset.role] - 1); c.touched = true; renderRoles(b.dataset.scope); },
+  'auto': b => { const s = b.dataset.scope, c = ctxOf(s); c.counts = autoCounts(countOf(s)); c.touched = false; renderRoles(s); },
+
+  // Режим A
+  'deal-local': () => startLocalDeal(),
+  'pass-btn':   () => onPassBtn(),
+  'pass-abort': async () => {
+    if (!await ask('Прервать раздачу? Роли сбросятся.', 'Прервать', true)) return;
+    passCard.reset(); L.inGame = false; openLocalSetup();
+  },
+
+  // Панель ведущего
+  'tog': b => {
+    const ctx = state.mode === 'local' ? L : H;
+    const p = ctx.players.find(x => String(x.id) === b.dataset.id);
+    if (!p) return;
+    const field = b.dataset.field;
+    const patch = field === 'alive' ? { alive: !p.alive } : { muted: !p.muted };
+    Object.assign(p, patch);
+    renderPanel();                                            // сразу на экране
+    if (state.mode === 'host') hostUpdate(sb.from('mafia_players').update(patch).eq('id', p.id));
+  },
+  'toggle-roles': () => { const ctx = state.mode === 'local' ? L : H; ctx.rolesHidden = !ctx.rolesHidden; renderPanel(); },
+  'all-speak': () => {
+    const ctx = state.mode === 'local' ? L : H;
+    ctx.players.forEach(p => { p.muted = false; });
+    renderPanel();
+    toast('Все могут говорить');
+    if (state.mode === 'host') hostUpdate(sb.from('mafia_players').update({ muted: false }).eq('room_code', H.code));
+  },
+  'new-game': async () => {
+    if (!await ask('Новая игра с теми же игроками? Роли перераздадутся заново.', 'Перераздать')) return;
+    if (state.mode === 'local') startLocalDeal();
+    else if (await hostDeal()) toast('Роли перерозданы');
+  },
+  'end-game': async () => {
+    if (state.mode === 'local') {
+      if (!await ask('Закончить игру? Роли сбросятся, имена останутся.', 'Закончить', true)) return;
+      L.inGame = false; openLocalSetup();
+    } else {
+      if (!await ask('Закончить игру? Все вернутся в лобби, роли сбросятся.', 'Закончить', true)) return;
+      hostToLobby();
+    }
+  },
+
+  // Режим B: ведущий
+  'deal-host': () => hostDeal(),
+  'kick': async b => {
+    const p = H.players.find(x => x.id === b.dataset.id);
+    if (!p || !await ask(`Убрать «${p.name}» из комнаты?`, 'Убрать', true)) return;
+    hostUpdate(sb.from('mafia_players').delete().eq('id', p.id));
+  },
+  'share-link': async () => {
+    const url = roomLink(H.code);
+    if (navigator.share) { try { await navigator.share({ title: 'Мафия', text: `Комната ${H.code}`, url }); } catch {} }
+    else actions['copy-link']();
+  },
+  'copy-link': async () => {
+    try { await navigator.clipboard.writeText(roomLink(H.code)); toast('Ссылка скопирована'); }
+    catch { toast(roomLink(H.code)); }
+  },
+  'close-room': async () => {
+    if (!await ask('Закрыть комнату? Игроки увидят, что игра закончилась.', 'Закрыть', true)) return;
+    await sb.from('mafia_rooms').update({ status: 'closed' }).eq('code', H.code);
+    store.del('mafia_host');
+    goHome();
+  },
+
+  // Режим B: игрок
+  'pl-card': () => onPlayerCard(),
+  'pl-leave': async () => {
+    if (!await ask('Выйти из комнаты?', 'Выйти', true)) return;
+    const id = P.id;
+    unsubscribe(P);
+    store.del('mafia_player');
+    P.id = null;
+    if (id) await sb.from('mafia_players').delete().eq('id', id);
+    goHome();
+  },
+};
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  actions[b.dataset.act]?.(b, e);
+});
+
+// Карта игрока открывается и с клавиатуры
+$('#pl-card').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPlayerCard(); }
+});
+
+// Имена: сохраняем на лету, Enter переводит на следующее поле
+$('#names').addEventListener('input', e => {
+  const i = +e.target.dataset.i;
+  L.names[i] = e.target.value;
+  store.set('mafia_names', L.names);
+});
+$('#names').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const next = $(`#names input[data-i="${+e.target.dataset.i + 1}"]`);
+  next ? next.focus() : e.target.blur();
+});
+
+$('#join-form').addEventListener('submit', onJoinSubmit);
+$('#j-code').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); });
+
+// Телефон проснулся: сеть могла отвалиться, перечитываем состояние
+const resync = () => {
+  if (state.mode === 'host') hostSync();
+  if (state.mode === 'player' && P.id) plSync();
+};
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resync(); });
+window.addEventListener('online', resync);
+setInterval(() => { if (document.visibilityState === 'visible') resync(); }, 20000);
+
+// Предупреждение при закрытии вкладки посреди офлайн-игры
+window.addEventListener('beforeunload', e => {
+  if (state.mode === 'local' && L.inGame) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* =====================================================================
+   СТАРТ
+   ===================================================================== */
+(function init() {
+  document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = ICON[el.dataset.icon]; });
+  passCard = makeCard($('#pass-card'));
+  plCard = makeCard($('#pl-card'));
+
+  const room = (new URLSearchParams(location.search).get('room') || '').replace(/\D/g, '').slice(0, 4);
+  const savedPlayer = store.get('mafia_player');
+  const savedHost = store.get('mafia_host');
+
+  renderHome();
+  if (room) {
+    if (savedPlayer?.room === room) openPlayer(savedPlayer.id, room);   // вернулся после перезагрузки
+    else if (savedHost?.room === room) openHost(room);
+    else openJoin(room);                                               // пришёл по ссылке или QR
+  } else if (savedPlayer?.id) {
+    openPlayer(savedPlayer.id, savedPlayer.room);
+  }
+})();
+</script>
+</body>
+</html>
