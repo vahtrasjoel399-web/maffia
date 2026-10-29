@@ -622,7 +622,7 @@ const CARD_BACK = `<svg viewBox="0 0 250 350" aria-hidden="true">
    ===================================================================== */
 const ROLES = {
   mafia:    { name: 'Мафия',         team: 'mafia', max: MAX_P, desc: 'Ночью вместе с мафией выбираешь, кого убить. Днём притворяйся мирным.' },
-  lawyer:   { name: 'Адвокат',       team: 'mafia', max: 1,     desc: 'Играешь за мафию. Ночью даёшь алиби одному игроку: днём его нельзя выгнать голосованием.' },
+  lawyer:   { name: 'Адвокат',       team: 'town',  max: 1,     desc: 'Ночью даёшь алиби одному игроку: днём его нельзя выгнать голосованием.' },
   sheriff:  { name: 'Комиссар',      team: 'town',  max: MAX_P, desc: 'Ночью проверяешь одного игрока: мафия он или нет.' },
   doctor:   { name: 'Доктор',        team: 'town',  max: MAX_P, desc: 'Ночью лечишь одного игрока. Если его пытались убить, он выживет.' },
   police:   { name: 'Полицейский',   team: 'town',  max: MAX_P, desc: 'Помощник Комиссара. Если Комиссар погибнет, ты займёшь его место.' },
@@ -630,20 +630,20 @@ const ROLES = {
   maniac:   { name: 'Маньяк',        team: 'solo',  max: MAX_P, desc: 'Охотишься на мафию. Ночью убиваешь одного игрока. Побеждаешь вместе с мирными.' },
   civilian: { name: 'Мирный житель', team: 'town',  max: MAX_P, desc: 'Ночью спишь. Днём ищешь мафию и голосуешь против неё.' },
 };
-const SPECIALS = ['mafia', 'lawyer', 'sheriff', 'police', 'doctor', 'judge', 'maniac'];   // мирные считаются сами
+const SPECIALS = ['mafia', 'sheriff', 'police', 'doctor', 'judge', 'lawyer', 'maniac'];   // мирные считаются сами
 const TEAM_LABEL = { mafia: 'Команда мафии', town: 'Мирные', solo: 'Охотник на мафию' };
 const roleOf = key => ROLES[key] || null;
 
-/* Авто-расклад: примерно 1 мафия на 3–4 игрока (Адвокат входит в их число с 9 игроков),
-   Комиссар всегда, Доктор с 5, Полицейский с 9, Судья с 10, Маньяк с 12. */
+/* Авто-расклад: примерно 1 мафия на 3–4 игрока, Комиссар всегда,
+   Доктор с 5, Полицейский с 9, Судья с 10, Адвокат с 11, Маньяк с 12. */
 function autoCounts(n) {
   n = Math.max(n, MIN_P);
   const m = Math.max(1, Math.round(n / 3.5));
   const c = { mafia: m, lawyer: 0, sheriff: 1, police: 0, doctor: 0, judge: 0, maniac: 0 };
-  if (n >= 9 && m >= 3) { c.lawyer = 1; c.mafia = m - 1; }
   if (n >= 5)  c.doctor = 1;
   if (n >= 9)  c.police = 1;
   if (n >= 10) c.judge = 1;
+  if (n >= 11) c.lawyer = 1;
   if (n >= 12) c.maniac = 1;
   return c;
 }
@@ -653,7 +653,7 @@ const sumSpecials = c => SPECIALS.reduce((s, k) => s + (c[k] || 0), 0);
 /* Проверка расклада. Возвращает { ok, civ, msg } */
 function checkRoles(c, n) {
   const civ = n - sumSpecials(c);
-  const maf = c.mafia + c.lawyer;
+  const maf = c.mafia;
   if (n < MIN_P) return { ok: false, civ: Math.max(0, civ), msg: `Не хватает игроков: ${MIN_P - n}. Нужно минимум ${MIN_P}.` };
   if (civ < 0)   return { ok: false, civ: 0, msg: `Ролей больше, чем игроков. Убери ${-civ}.` };
   if (c.mafia === 0) return { ok: false, civ, msg: 'Добавь хотя бы одну мафию.' };
