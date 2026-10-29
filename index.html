@@ -135,6 +135,18 @@ ul, ol{ list-style: none; }
 .home .lead{ font-size: 19px; color: var(--muted); margin-top: var(--s3); max-width: 30ch; }
 .stack{ display: grid; gap: var(--s3); }
 .home-foot{ margin-top: auto; color: var(--faint); font-size: 15px; }
+.home-top{ display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); }
+
+/* ---------- Переключатель языка ---------- */
+.lang{ display: inline-flex; flex: none; border: 1px solid var(--line-2); border-radius: var(--r-sm); overflow: hidden; }
+.lang button{
+  min-width: 44px; height: 44px; padding: 0 var(--s2);
+  border: 0; background: transparent; color: var(--faint);
+  font-size: 14px; font-weight: 650; letter-spacing: .06em;
+}
+.lang button + button{ border-left: 1px solid var(--line-2); }
+.lang button[aria-pressed="true"]{ background: var(--surface-2); color: var(--text); }
+.bar .lang{ margin-right: var(--s2); }
 
 /* ---------- Заголовки секций ---------- */
 .sec-head{ display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin: var(--s6) 0 var(--s3); }
@@ -350,64 +362,67 @@ ul, ol{ list-style: none; }
   <section id="s-home" class="screen">
     <div class="home">
       <div>
+        <div class="home-top">
         <svg class="home-mark" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2"><path d="M28 3 52 28 28 53 4 28z"/><path d="M28 12 43 28 28 44 13 28z" stroke-width="1.2"/></svg>
-        <h1>Мафия</h1>
-        <p class="lead">Раздача ролей и пульт ведущего для живой игры.</p>
+        <div class="lang" data-lang-switch></div>
+        </div>
+        <h1 data-i18n="title">Мафия</h1>
+        <p class="lead" data-i18n="lead">Раздача ролей и пульт ведущего для живой игры.</p>
       </div>
       <div class="stack">
         <button class="choice" data-act="mode-local">
-          <span class="choice-t">Один телефон по кругу</span>
-          <span class="choice-s">Без интернета. Телефон передают из рук в руки.</span>
+          <span class="choice-t" data-i18n="modeLocal">Один телефон по кругу</span>
+          <span class="choice-s" data-i18n="modeLocalSub">Без интернета. Телефон передают из рук в руки.</span>
         </button>
         <button class="choice" data-act="mode-online">
-          <span class="choice-t">У каждого свой телефон</span>
-          <span class="choice-s">Комната по коду или QR. Нужен интернет.</span>
+          <span class="choice-t" data-i18n="modeOnline">У каждого свой телефон</span>
+          <span class="choice-s" data-i18n="modeOnlineSub">Комната по коду или QR. Нужен интернет.</span>
         </button>
       </div>
       <div class="stack" id="resume"></div>
-      <p class="home-foot">Ведущий объявляет всё голосом. Приложение показывает роли и хранит статусы.</p>
+      <p class="home-foot" data-i18n="homeFoot">Ведущий объявляет всё голосом. Приложение показывает роли и хранит статусы.</p>
     </div>
   </section>
 
   <!-- ========== РЕЖИМ A: НАСТРОЙКА ========== -->
   <section id="s-setup" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="back-home" aria-label="Назад" data-icon="back"></button>
-      <h2>Один телефон по кругу</h2>
+      <button class="icon-btn" data-act="back-home" aria-label="Назад" data-i18n-aria="back" data-icon="back"></button>
+      <h2 data-i18n="modeLocal">Один телефон по кругу</h2>
     </header>
     <div class="content">
-      <div class="sec-head"><h3 class="sec-t">Игроки</h3></div>
+      <div class="sec-head"><h3 class="sec-t" data-i18n="players">Игроки</h3></div>
       <div class="count-row">
-        <span class="lbl">Сколько игроков</span>
+        <span class="lbl" data-i18n="howMany">Сколько игроков</span>
         <div class="stepper">
-          <button data-act="n-dec" aria-label="Меньше">−</button>
+          <button data-act="n-dec" aria-label="Меньше" data-i18n-aria="less">−</button>
           <output id="n-out">8</output>
-          <button data-act="n-inc" aria-label="Больше">+</button>
+          <button data-act="n-inc" aria-label="Больше" data-i18n-aria="more">+</button>
         </div>
       </div>
       <ol class="names" id="names"></ol>
 
       <div class="sec-head">
-        <h3 class="sec-t">Роли</h3>
-        <button class="btn small" data-act="auto" data-scope="local">Авто-расклад</button>
+        <h3 class="sec-t" data-i18n="roles">Роли</h3>
+        <button class="btn small" data-act="auto" data-scope="local" data-i18n="auto">Авто-расклад</button>
       </div>
       <ul class="roles" id="roles-local"></ul>
     </div>
     <div class="dock">
       <p class="dock-msg" id="local-msg"></p>
-      <button class="btn primary big" id="deal-local" data-act="deal-local">Раздать роли</button>
+      <button class="btn primary big" id="deal-local" data-act="deal-local" data-i18n="deal">Раздать роли</button>
     </div>
   </section>
 
   <!-- ========== РЕЖИМ A: ПЕРЕДАЧА ТЕЛЕФОНА ========== -->
   <section id="s-pass" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="pass-abort" aria-label="Прервать раздачу" data-icon="back"></button>
-      <h2>Раздача ролей</h2>
+      <button class="icon-btn" data-act="pass-abort" aria-label="Прервать раздачу" data-i18n-aria="passAbort" data-icon="back"></button>
+      <h2 data-i18n="dealing">Раздача ролей</h2>
       <span class="bar-side" id="pass-prog"></span>
     </header>
     <div class="pass">
-      <p class="pass-k">Теперь</p>
+      <p class="pass-k" data-i18n="passNow">Теперь</p>
       <p class="pass-name" id="pass-name"></p>
       <div class="flip" id="pass-card" data-card></div>
       <p class="hint" id="pass-hint"></p>
@@ -420,8 +435,8 @@ ul, ol{ list-style: none; }
   <!-- ========== РЕЖИМ A: ПАНЕЛЬ ВЕДУЩЕГО ========== -->
   <section id="s-local-panel" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="end-game" aria-label="Закончить игру" data-icon="back"></button>
-      <h2>Все роли розданы</h2>
+      <button class="icon-btn" data-act="end-game" aria-label="Закончить игру" data-i18n-aria="endGame" data-icon="back"></button>
+      <h2 data-i18n="allDealt">Все роли розданы</h2>
     </header>
     <div class="content" id="panel-local"></div>
   </section>
@@ -429,18 +444,18 @@ ul, ol{ list-style: none; }
   <!-- ========== РЕЖИМ B: ВЫБОР ========== -->
   <section id="s-online" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="back-home" aria-label="Назад" data-icon="back"></button>
-      <h2>У каждого свой телефон</h2>
+      <button class="icon-btn" data-act="back-home" aria-label="Назад" data-i18n-aria="back" data-icon="back"></button>
+      <h2 data-i18n="modeOnline">У каждого свой телефон</h2>
     </header>
     <div class="content">
       <div class="stack" style="margin-top: var(--s4)">
         <button class="choice accent" data-act="host-create" id="btn-create">
-          <span class="choice-t">Я ведущий</span>
-          <span class="choice-s">Создать комнату и раздать роли</span>
+          <span class="choice-t" data-i18n="iHost">Я ведущий</span>
+          <span class="choice-s" data-i18n="iHostSub">Создать комнату и раздать роли</span>
         </button>
         <button class="choice" data-act="go-join">
-          <span class="choice-t">Я игрок</span>
-          <span class="choice-s">Войти по коду комнаты</span>
+          <span class="choice-t" data-i18n="iPlayer">Я игрок</span>
+          <span class="choice-s" data-i18n="iPlayerSub">Войти по коду комнаты</span>
         </button>
       </div>
     </div>
@@ -449,69 +464,70 @@ ul, ol{ list-style: none; }
   <!-- ========== РЕЖИМ B: ВХОД ИГРОКА ========== -->
   <section id="s-join" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="mode-online" aria-label="Назад" data-icon="back"></button>
-      <h2>Вход в комнату</h2>
+      <button class="icon-btn" data-act="mode-online" aria-label="Назад" data-i18n-aria="back" data-icon="back"></button>
+      <h2 data-i18n="joinTitle">Вход в комнату</h2>
+      <div class="lang" data-lang-switch></div>
     </header>
     <form class="content" id="join-form" autocomplete="off" novalidate>
       <label class="field">
-        <span>Код комнаты</span>
+        <span data-i18n="roomCode">Код комнаты</span>
         <input class="input code-input" id="j-code" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000">
       </label>
       <label class="field">
-        <span>Твоё имя</span>
-        <input class="input" id="j-name" maxlength="20" placeholder="Как тебя называть" enterkeyhint="go">
+        <span data-i18n="yourName">Твоё имя</span>
+        <input class="input" id="j-name" maxlength="20" placeholder="Как тебя называть" data-i18n-ph="namePh" enterkeyhint="go">
       </label>
       <p class="err" id="j-err" hidden></p>
     </form>
     <div class="dock">
-      <button class="btn primary big" type="submit" form="join-form" id="j-btn">Войти</button>
+      <button class="btn primary big" type="submit" form="join-form" id="j-btn" data-i18n="join">Войти</button>
     </div>
   </section>
 
   <!-- ========== РЕЖИМ B: ЛОББИ ВЕДУЩЕГО ========== -->
   <section id="s-host-lobby" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-icon="back"></button>
-      <h2>Лобби</h2>
+      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-i18n-aria="toHome" data-icon="back"></button>
+      <h2 data-i18n="lobby">Лобби</h2>
     </header>
     <div class="content">
       <div class="room">
         <div>
-          <span class="k">Код комнаты</span>
+          <span class="k" data-i18n="roomCode">Код комнаты</span>
           <span class="code" id="h-code">····</span>
         </div>
-        <div class="qr" id="h-qr" aria-label="QR-код со ссылкой на комнату"></div>
+        <div class="qr" id="h-qr" aria-label="QR-код со ссылкой на комнату" data-i18n-aria="qrAria"></div>
         <p class="link" id="h-link"></p>
       </div>
       <div class="share-row">
-        <button class="btn" data-act="share-link">Поделиться</button>
-        <button class="btn" data-act="copy-link">Копировать</button>
+        <button class="btn" data-act="share-link" data-i18n="share">Поделиться</button>
+        <button class="btn" data-act="copy-link" data-i18n="copy">Копировать</button>
       </div>
 
-      <div class="sec-head"><h3 class="sec-t">Игроки</h3><span class="note" id="h-count"></span></div>
+      <div class="sec-head"><h3 class="sec-t" data-i18n="players">Игроки</h3><span class="note" id="h-count"></span></div>
       <ul class="roster" id="h-roster"></ul>
 
       <div class="sec-head">
-        <h3 class="sec-t">Роли</h3>
-        <button class="btn small" data-act="auto" data-scope="host">Авто-расклад</button>
+        <h3 class="sec-t" data-i18n="roles">Роли</h3>
+        <button class="btn small" data-act="auto" data-scope="host" data-i18n="auto">Авто-расклад</button>
       </div>
       <ul class="roles" id="roles-host"></ul>
 
       <div class="panel-actions">
-        <button class="btn danger" data-act="close-room">Закрыть комнату</button>
+        <button class="btn danger" data-act="close-room" data-i18n="closeRoom">Закрыть комнату</button>
       </div>
     </div>
     <div class="dock">
       <p class="dock-msg" id="host-msg"></p>
-      <button class="btn primary big" id="deal-host" data-act="deal-host">Раздать роли</button>
+      <button class="btn primary big" id="deal-host" data-act="deal-host" data-i18n="deal">Раздать роли</button>
     </div>
   </section>
 
   <!-- ========== РЕЖИМ B: ПАНЕЛЬ ВЕДУЩЕГО ========== -->
   <section id="s-host-game" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-icon="back"></button>
-      <h2 id="hg-title">Игра</h2>
+      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-i18n-aria="toHome" data-icon="back"></button>
+      <h2 id="hg-title" data-i18n="game">Игра</h2>
     </header>
     <div class="content" id="panel-host"></div>
   </section>
@@ -519,8 +535,8 @@ ul, ol{ list-style: none; }
   <!-- ========== РЕЖИМ B: ЭКРАН ИГРОКА ========== -->
   <section id="s-player" class="screen" hidden>
     <header class="bar">
-      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-icon="back"></button>
-      <h2 id="pl-title">Комната</h2>
+      <button class="icon-btn" data-act="back-home" aria-label="На главную" data-i18n-aria="toHome" data-icon="back"></button>
+      <h2 id="pl-title" data-i18n="roomWord">Комната</h2>
     </header>
     <div class="content player">
       <p class="hello" id="pl-hello"></p>
@@ -528,29 +544,29 @@ ul, ol{ list-style: none; }
 
       <div id="pl-wait">
         <div class="wait">
-          <h2 id="pl-wait-t">Ждём ведущего</h2>
-          <p id="pl-wait-s">Когда все соберутся, ведущий раздаст роли.</p>
+          <h2 id="pl-wait-t" data-i18n="waitHost">Ждём ведущего</h2>
+          <p id="pl-wait-s" data-i18n="waitHostSub">Когда все соберутся, ведущий раздаст роли.</p>
         </div>
-        <div class="sec-head"><h3 class="sec-t">В комнате</h3><span class="note" id="pl-count"></span></div>
+        <div class="sec-head"><h3 class="sec-t" data-i18n="inRoom">В комнате</h3><span class="note" id="pl-count"></span></div>
         <ul class="roster" id="pl-roster"></ul>
         <div class="panel-actions">
-          <button class="btn ghost" data-act="pl-leave">Выйти из комнаты</button>
+          <button class="btn ghost" data-act="pl-leave" data-i18n="leaveRoom">Выйти из комнаты</button>
         </div>
       </div>
 
       <div id="pl-game" class="pl-game" hidden>
-        <div class="flip" id="pl-card" data-card data-act="pl-card" role="button" tabindex="0" aria-label="Показать или скрыть роль"></div>
-        <p class="hint" id="pl-hint">Нажми, чтобы показать</p>
+        <div class="flip" id="pl-card" data-card data-act="pl-card" role="button" tabindex="0" aria-label="Показать или скрыть роль" data-i18n-aria="cardAria"></div>
+        <p class="hint" id="pl-hint" data-i18n="tapShow">Нажми, чтобы показать</p>
       </div>
 
       <div id="pl-gone" hidden>
         <div class="wait">
-          <h2>Игра закончилась</h2>
+          <h2 data-i18n="gameOver">Игра закончилась</h2>
           <p id="pl-gone-s"></p>
         </div>
         <div class="panel-actions">
-          <button class="btn primary" data-act="go-join">Войти в другую комнату</button>
-          <button class="btn ghost" data-act="back-home">На главную</button>
+          <button class="btn primary" data-act="go-join" data-i18n="joinOther">Войти в другую комнату</button>
+          <button class="btn ghost" data-act="back-home" data-i18n="toHome">На главную</button>
         </div>
       </div>
     </div>
@@ -562,7 +578,7 @@ ul, ol{ list-style: none; }
   <div class="sheet" role="dialog" aria-modal="true">
     <p id="modal-text"></p>
     <button class="btn primary" id="modal-ok">Да</button>
-    <button class="btn ghost" id="modal-cancel">Отмена</button>
+    <button class="btn ghost" id="modal-cancel" data-i18n="cancel">Отмена</button>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -620,16 +636,20 @@ const CARD_BACK = `<svg viewBox="0 0 250 350" aria-hidden="true">
    РОЛИ
    ===================================================================== */
 const ROLES = {
-  mafia:    { name: 'Мафия',         team: 'mafia', max: MAX_P, desc: 'Ночью вместе с мафией выбираешь, кого убить. Днём притворяйся мирным.' },
-  lawyer:   { name: 'Адвокат',       team: 'town',  max: 1,     desc: 'Ночью даёшь алиби одному игроку: днём его нельзя выгнать голосованием.' },
-  doctor:   { name: 'Доктор',        team: 'town',  max: MAX_P, desc: 'Ночью лечишь одного игрока. Если его пытались убить, он выживет.' },
-  police:   { name: 'Полицейский',   team: 'town',  max: MAX_P, desc: 'Ночью проверяешь одного игрока: мафия он или нет.' },
-  judge:    { name: 'Судья',         team: 'town',  max: 1,     desc: 'Ночью выбираешь игрока и затыкаешь ему рот: весь следующий день он молчит.' },
-  maniac:   { name: 'Маньяк',        team: 'solo',  max: MAX_P, desc: 'Охотишься на мафию. Ночью убиваешь одного игрока. Побеждаешь вместе с мирными.' },
-  civilian: { name: 'Мирный житель', team: 'town',  max: MAX_P, desc: 'Ночью спишь. Днём ищешь мафию и голосуешь против неё.' },
+  mafia:    { team: 'mafia', max: MAX_P },
+  lawyer:   { team: 'town',  max: 1 },
+  doctor:   { team: 'town',  max: MAX_P },
+  police:   { team: 'town',  max: MAX_P },
+  judge:    { team: 'town',  max: 1 },
+  maniac:   { team: 'solo',  max: MAX_P },
+  civilian: { team: 'town',  max: MAX_P },
 };
+// Название и описание роли берутся из словаря текущего языка
+Object.keys(ROLES).forEach(k => Object.defineProperties(ROLES[k], {
+  name: { get: () => t('roles')[k][0] },
+  desc: { get: () => t('roles')[k][1] },
+}));
 const SPECIALS = ['mafia', 'police', 'doctor', 'judge', 'lawyer', 'maniac'];   // мирные считаются сами
-const TEAM_LABEL = { mafia: 'Команда мафии', town: 'Мирные', solo: 'Охотник на мафию' };
 const roleOf = key => ROLES[key] || null;
 
 /* Авто-расклад: примерно 1 мафия на 3–4 игрока, Полицейский всегда,
@@ -651,11 +671,11 @@ const sumSpecials = c => SPECIALS.reduce((s, k) => s + (c[k] || 0), 0);
 function checkRoles(c, n) {
   const civ = n - sumSpecials(c);
   const maf = c.mafia;
-  if (n < MIN_P) return { ok: false, civ: Math.max(0, civ), msg: `Не хватает игроков: ${MIN_P - n}. Нужно минимум ${MIN_P}.` };
-  if (civ < 0)   return { ok: false, civ: 0, msg: `Ролей больше, чем игроков. Убери ${-civ}.` };
-  if (c.mafia === 0) return { ok: false, civ, msg: 'Добавь хотя бы одну мафию.' };
-  if (maf * 2 >= n) return { ok: false, civ, msg: 'Мафии должно быть меньше половины игроков.' };
-  return { ok: true, civ, msg: `${n} ${plural(n, 'роль', 'роли', 'ролей')} на ${n} ${plural(n, 'игрока', 'игрока', 'игроков')}` };
+  if (n < MIN_P) return { ok: false, civ: Math.max(0, civ), msg: t('needMore', MIN_P - n, MIN_P) };
+  if (civ < 0)   return { ok: false, civ: 0, msg: t('tooMany', -civ) };
+  if (c.mafia === 0) return { ok: false, civ, msg: t('noMafia') };
+  if (maf * 2 >= n) return { ok: false, civ, msg: t('mafiaHalf') };
+  return { ok: true, civ, msg: t('rolesOk', n) };
 }
 
 /* Колода ролей под расклад, перемешанная Фишером–Йетсом */
@@ -664,6 +684,369 @@ function buildDeck(c, n) {
   SPECIALS.forEach(k => { for (let i = 0; i < c[k]; i++) deck.push(k); });
   while (deck.length < n) deck.push('civilian');
   return shuffle(deck);
+}
+
+/* =====================================================================
+   ЯЗЫКИ: русский (основной), эстонский, английский.
+   Строка или функция от параметров. Чего нет в словаре, берётся из русского.
+   ===================================================================== */
+const LANGS = ['ru', 'et', 'en'];
+const I18N = {
+  ru: {
+    title: 'Мафия',
+    lead: 'Раздача ролей и пульт ведущего для живой игры.',
+    modeLocal: 'Один телефон по кругу',
+    modeLocalSub: 'Без интернета. Телефон передают из рук в руки.',
+    modeOnline: 'У каждого свой телефон',
+    modeOnlineSub: 'Комната по коду или QR. Нужен интернет.',
+    homeFoot: 'Ведущий объявляет всё голосом. Приложение показывает роли и хранит статусы.',
+    back: 'Назад', toHome: 'На главную',
+    players: 'Игроки', howMany: 'Сколько игроков', less: 'Меньше', more: 'Больше',
+    roles: 'Роли', auto: 'Авто-расклад', deal: 'Раздать роли',
+    passAbort: 'Прервать раздачу', dealing: 'Раздача ролей', passNow: 'Теперь',
+    showRole: 'Показать роль', hide: 'Скрыть',
+    hintReady: 'Проверь, что экран видишь только ты.',
+    hintShown: 'Запомни роль и нажми «Скрыть».',
+    next: n => `Дальше: ${n}`,
+    passTo: n => `Роль скрыта. Передай телефон: ${n}.`,
+    passBack: 'Роль скрыта. Верни телефон ведущему.',
+    progress: (i, n) => `${i} из ${n}`,
+    endGame: 'Закончить игру', allDealt: 'Все роли розданы',
+    iHost: 'Я ведущий', iHostSub: 'Создать комнату и раздать роли',
+    iPlayer: 'Я игрок', iPlayerSub: 'Войти по коду комнаты',
+    joinTitle: 'Вход в комнату', roomCode: 'Код комнаты', yourName: 'Твоё имя',
+    namePh: 'Как тебя называть', join: 'Войти',
+    lobby: 'Лобби', qrAria: 'QR-код со ссылкой на комнату',
+    share: 'Поделиться', copy: 'Копировать', closeRoom: 'Закрыть комнату',
+    game: 'Игра', roomWord: 'Комната', room: c => `Комната ${c}`,
+    waitHost: 'Ждём ведущего', waitHostSub: 'Когда все соберутся, ведущий раздаст роли.',
+    inRoom: 'В комнате', leaveRoom: 'Выйти из комнаты',
+    cardAria: 'Показать или скрыть роль',
+    tapShow: 'Нажми, чтобы показать', tapHide: 'Нажми ещё раз, чтобы скрыть',
+    gameOver: 'Игра закончилась', joinOther: 'Войти в другую комнату',
+    yes: 'Да', cancel: 'Отмена',
+
+    roles: {
+      mafia:    ['Мафия', 'Ночью вместе с мафией выбираешь, кого убить. Днём притворяйся мирным.'],
+      lawyer:   ['Адвокат', 'Ночью даёшь алиби одному игроку: днём его нельзя выгнать голосованием.'],
+      doctor:   ['Доктор', 'Ночью лечишь одного игрока. Если его пытались убить, он выживет.'],
+      police:   ['Полицейский', 'Ночью проверяешь одного игрока: мафия он или нет.'],
+      judge:    ['Судья', 'Ночью выбираешь игрока и затыкаешь ему рот: весь следующий день он молчит.'],
+      maniac:   ['Маньяк', 'Охотишься на мафию. Ночью убиваешь одного игрока. Побеждаешь вместе с мирными.'],
+      civilian: ['Мирный житель', 'Ночью спишь. Днём ищешь мафию и голосуешь против неё.'],
+    },
+    teams: { mafia: 'Команда мафии', town: 'Мирные', solo: 'Охотник на мафию' },
+    everyoneElse: 'все остальные',
+    lessRole: r => `Меньше: ${r}`, moreRole: r => `Больше: ${r}`,
+
+    needMore: (k, min) => `Не хватает игроков: ${k}. Нужно минимум ${min}.`,
+    tooMany: k => `Ролей больше, чем игроков. Убери ${k}.`,
+    noMafia: 'Добавь хотя бы одну мафию.',
+    mafiaHalf: 'Мафии должно быть меньше половины игроков.',
+    rolesOk: n => `${n} ${pl(n, { one: 'роль', few: 'роли', many: 'ролей' })} на ${n} ${pl(n, { one: 'игрока', few: 'игрока', many: 'игроков' })}`,
+
+    townWon: 'Мафия выбыла. Мирные победили.',
+    mafiaWon: 'Мафии не меньше, чем остальных. Мафия победила.',
+    roleHidden: 'роль скрыта', noRole: 'без роли',
+    dead: 'Убит', muted: 'Молчит',
+    tallyMafia: n => pl(n, { one: 'мафия', few: 'мафии', many: 'мафии' }),
+    tallyTown: n => pl(n, { one: 'мирный', few: 'мирных', many: 'мирных' }),
+    tallySolo: 'маньяк',
+    alive: (a, n) => `Живы ${a} из ${n}`,
+    showRoles: 'Показать роли', hideRoles: 'Скрыть роли',
+    noPlayers: 'Игроков нет',
+    allSpeak: 'Все могут говорить',
+    newGame: 'Новая игра с теми же игроками',
+    playerN: i => `Игрок ${i}`,
+
+    noFreeCode: 'Не удалось подобрать свободный код. Попробуй ещё раз.',
+    offline: 'Нет связи с сервером. Проверь интернет.',
+    offlineShort: 'Нет связи с сервером',
+    fileLink: 'Ссылка и QR заработают, когда сайт будет опубликован.',
+    roomClosed: 'Комната закрыта',
+    roomTaken: c => `Комната ${c} уже занята другой игрой`,
+    people: n => `${n} ${pl(n, { one: 'человек', few: 'человека', many: 'человек' })}`,
+    lobbyEmpty: 'Пока никого. Покажи игрокам код или QR.',
+    kick: n => `Убрать ${n}`,
+    dealFail: 'Не получилось раздать роли. Попробуй ещё раз.',
+    saveFail: 'Не сохранилось. Проверь интернет.',
+
+    errCode: 'Код комнаты: 4 цифры.',
+    errName: 'Напиши своё имя.',
+    errNoRoom: 'Комнаты с таким кодом нет. Проверь цифры.',
+    errClosed: 'Эта комната уже закрыта.',
+    goneClosed: 'Ведущий закрыл комнату.',
+    goneKicked: 'Тебя нет в этой комнате. Возможно, ведущий убрал тебя из списка.',
+    newDeal: 'Новая раздача',
+    youAre: 'Ты',
+    youDead: 'Ты убит', youMuted: 'Тебе нельзя говорить',
+    dealingNow: 'Раздаём роли', dealingNowSub: 'Сейчас появится твоя карта.',
+    inProgress: 'Игра уже идёт', inProgressSub: 'Ты в комнате. Роль придёт со следующей раздачей.',
+    meTag: '(ты)',
+    resumeHost: c => `Вернуться в комнату ${c} (ведущий)`,
+    resumePlayer: c => `Вернуться в комнату ${c} (игрок)`,
+
+    askAbort: 'Прервать раздачу? Роли сбросятся.', okAbort: 'Прервать',
+    askNew: 'Новая игра с теми же игроками? Роли перераздадутся заново.', okNew: 'Перераздать',
+    redealt: 'Роли перерозданы',
+    askEndLocal: 'Закончить игру? Роли сбросятся, имена останутся.',
+    askEndHost: 'Закончить игру? Все вернутся в лобби, роли сбросятся.',
+    okEnd: 'Закончить',
+    askKick: n => `Убрать «${n}» из комнаты?`, okKick: 'Убрать',
+    linkCopied: 'Ссылка скопирована',
+    askClose: 'Закрыть комнату? Игроки увидят, что игра закончилась.', okClose: 'Закрыть',
+    askLeave: 'Выйти из комнаты?', okLeave: 'Выйти',
+  },
+
+  et: {
+    title: 'Maffia',
+    lead: 'Rollide jagamine ja mängujuhi pult elavaks mänguks.',
+    modeLocal: 'Üks telefon käib ringi',
+    modeLocalSub: 'Internetti pole vaja. Telefon liigub käest kätte.',
+    modeOnline: 'Igaühel oma telefon',
+    modeOnlineSub: 'Tuppa koodi või QR-iga. Vaja on internetti.',
+    homeFoot: 'Mängujuht teatab kõik häälega. Rakendus näitab rolle ja hoiab staatuseid meeles.',
+    back: 'Tagasi', toHome: 'Avalehele',
+    players: 'Mängijad', howMany: 'Mängijate arv', less: 'Vähem', more: 'Rohkem',
+    roles: 'Rollid', auto: 'Automaatselt', deal: 'Jaga rollid',
+    passAbort: 'Katkesta jagamine', dealing: 'Rollide jagamine', passNow: 'Nüüd on kord',
+    showRole: 'Näita rolli', hide: 'Peida',
+    hintReady: 'Veendu, et ekraani näed ainult sina.',
+    hintShown: 'Jäta roll meelde ja vajuta „Peida“.',
+    next: n => `Edasi: ${n}`,
+    passTo: n => `Roll on peidetud. Anna telefon edasi: ${n}.`,
+    passBack: 'Roll on peidetud. Anna telefon mängujuhile tagasi.',
+    progress: (i, n) => `${i} / ${n}`,
+    endGame: 'Lõpeta mäng', allDealt: 'Kõik rollid on jagatud',
+    iHost: 'Olen mängujuht', iHostSub: 'Loo tuba ja jaga rollid',
+    iPlayer: 'Olen mängija', iPlayerSub: 'Sisene toa koodiga',
+    joinTitle: 'Tuppa sisenemine', roomCode: 'Toa kood', yourName: 'Sinu nimi',
+    namePh: 'Kuidas sind kutsuda', join: 'Sisene',
+    lobby: 'Ootetuba', qrAria: 'QR-kood toa lingiga',
+    share: 'Jaga', copy: 'Kopeeri', closeRoom: 'Sulge tuba',
+    game: 'Mäng', roomWord: 'Tuba', room: c => `Tuba ${c}`,
+    waitHost: 'Ootame mängujuhti', waitHostSub: 'Kui kõik on koos, jagab mängujuht rollid.',
+    inRoom: 'Toas', leaveRoom: 'Lahku toast',
+    cardAria: 'Näita või peida roll',
+    tapShow: 'Vajuta, et näha', tapHide: 'Vajuta uuesti, et peita',
+    gameOver: 'Mäng on läbi', joinOther: 'Sisene teise tuppa',
+    yes: 'Jah', cancel: 'Loobu',
+
+    roles: {
+      mafia:    ['Maffia', 'Öösel valid koos maffiaga, keda tappa. Päeval teeskle linnaelanikku.'],
+      lawyer:   ['Advokaat', 'Öösel annad ühele mängijale alibi: päeval ei saa teda hääletusega välja visata.'],
+      doctor:   ['Arst', 'Öösel ravid ühte mängijat. Kui teda prooviti tappa, jääb ta ellu.'],
+      police:   ['Politseinik', 'Öösel kontrollid ühte mängijat: kas ta on maffia või mitte.'],
+      judge:    ['Kohtunik', 'Öösel valid mängija ja sulged tal suu: terve järgmise päeva ta vaikib.'],
+      maniac:   ['Maniakk', 'Jahid maffiat. Öösel tapad ühe mängija. Võidad koos linnaelanikega.'],
+      civilian: ['Linnaelanik', 'Öösel magad. Päeval otsid maffiat ja hääletad selle vastu.'],
+    },
+    teams: { mafia: 'Maffia meeskond', town: 'Linnaelanikud', solo: 'Maffiakütt' },
+    everyoneElse: 'kõik ülejäänud',
+    lessRole: r => `Vähem: ${r}`, moreRole: r => `Rohkem: ${r}`,
+
+    needMore: (k, min) => `Mängijaid on puudu: ${k}. Vaja on vähemalt ${min}.`,
+    tooMany: k => `Rolle on rohkem kui mängijaid. Eemalda ${k}.`,
+    noMafia: 'Lisa vähemalt üks maffia.',
+    mafiaHalf: 'Maffiat peab olema vähem kui pool mängijatest.',
+    rolesOk: n => `${n} rolli ${n} mängijale`,
+
+    townWon: 'Maffia on väljas. Linnaelanikud võitsid.',
+    mafiaWon: 'Maffiat on sama palju kui teisi või rohkem. Maffia võitis.',
+    roleHidden: 'roll peidetud', noRole: 'rollita',
+    dead: 'Tapetud', muted: 'Vaikib',
+    tallyMafia: n => pl(n, { one: 'maffia', other: 'maffiat' }),
+    tallyTown: n => pl(n, { one: 'linnaelanik', other: 'linnaelanikku' }),
+    tallySolo: 'maniakk',
+    alive: (a, n) => `Elus ${a} / ${n}`,
+    showRoles: 'Näita rolle', hideRoles: 'Peida rollid',
+    noPlayers: 'Mängijaid pole',
+    allSpeak: 'Kõik võivad rääkida',
+    newGame: 'Uus mäng samade mängijatega',
+    playerN: i => `Mängija ${i}`,
+
+    noFreeCode: 'Vaba koodi ei leitud. Proovi uuesti.',
+    offline: 'Serveriga ühendust pole. Kontrolli internetti.',
+    offlineShort: 'Serveriga ühendust pole',
+    fileLink: 'Link ja QR hakkavad tööle, kui sait on avaldatud.',
+    roomClosed: 'Tuba on suletud',
+    roomTaken: c => `Tuba ${c} on juba teise mängu käes`,
+    people: n => `${n} ${pl(n, { one: 'inimene', other: 'inimest' })}`,
+    lobbyEmpty: 'Veel pole kedagi. Näita mängijatele koodi või QR-i.',
+    kick: n => `Eemalda ${n}`,
+    dealFail: 'Rollide jagamine ebaõnnestus. Proovi uuesti.',
+    saveFail: 'Ei salvestunud. Kontrolli internetti.',
+
+    errCode: 'Toa kood on 4 numbrit.',
+    errName: 'Kirjuta oma nimi.',
+    errNoRoom: 'Sellise koodiga tuba pole. Kontrolli numbreid.',
+    errClosed: 'See tuba on juba suletud.',
+    goneClosed: 'Mängujuht sulges toa.',
+    goneKicked: 'Sind pole selles toas. Võib-olla eemaldas mängujuht sind nimekirjast.',
+    newDeal: 'Uus jagamine',
+    youAre: 'Sina',
+    youDead: 'Sind tapeti', youMuted: 'Sa ei tohi rääkida',
+    dealingNow: 'Jagame rolle', dealingNowSub: 'Kohe ilmub sinu kaart.',
+    inProgress: 'Mäng juba käib', inProgressSub: 'Oled toas. Rolli saad järgmisel jagamisel.',
+    meTag: '(sina)',
+    resumeHost: c => `Tagasi tuppa ${c} (mängujuht)`,
+    resumePlayer: c => `Tagasi tuppa ${c} (mängija)`,
+
+    askAbort: 'Katkestada jagamine? Rollid tühistatakse.', okAbort: 'Katkesta',
+    askNew: 'Uus mäng samade mängijatega? Rollid jagatakse uuesti.', okNew: 'Jaga uuesti',
+    redealt: 'Rollid on uuesti jagatud',
+    askEndLocal: 'Lõpetada mäng? Rollid tühistatakse, nimed jäävad alles.',
+    askEndHost: 'Lõpetada mäng? Kõik naasevad ootetuppa, rollid tühistatakse.',
+    okEnd: 'Lõpeta',
+    askKick: n => `Eemaldada „${n}“ toast?`, okKick: 'Eemalda',
+    linkCopied: 'Link on kopeeritud',
+    askClose: 'Sulgeda tuba? Mängijad näevad, et mäng on läbi.', okClose: 'Sulge',
+    askLeave: 'Lahkuda toast?', okLeave: 'Lahku',
+  },
+
+  en: {
+    title: 'Mafia',
+    lead: 'Role dealing and a host console for live games.',
+    modeLocal: 'One phone, passed around',
+    modeLocalSub: 'No internet needed. The phone goes from hand to hand.',
+    modeOnline: 'Everyone on their own phone',
+    modeOnlineSub: 'Join a room by code or QR. Needs internet.',
+    homeFoot: 'The host announces everything out loud. The app shows roles and tracks who is out.',
+    back: 'Back', toHome: 'Home',
+    players: 'Players', howMany: 'Number of players', less: 'Fewer', more: 'More',
+    roles: 'Roles', auto: 'Auto', deal: 'Deal roles',
+    passAbort: 'Stop dealing', dealing: 'Dealing roles', passNow: 'Now it’s',
+    showRole: 'Show role', hide: 'Hide',
+    hintReady: 'Make sure only you can see the screen.',
+    hintShown: 'Remember your role and tap “Hide”.',
+    next: n => `Next: ${n}`,
+    passTo: n => `Role hidden. Pass the phone to ${n}.`,
+    passBack: 'Role hidden. Give the phone back to the host.',
+    progress: (i, n) => `${i} of ${n}`,
+    endGame: 'End game', allDealt: 'All roles dealt',
+    iHost: 'I’m the host', iHostSub: 'Create a room and deal roles',
+    iPlayer: 'I’m a player', iPlayerSub: 'Join with a room code',
+    joinTitle: 'Join a room', roomCode: 'Room code', yourName: 'Your name',
+    namePh: 'What should we call you', join: 'Join',
+    lobby: 'Lobby', qrAria: 'QR code with the room link',
+    share: 'Share', copy: 'Copy', closeRoom: 'Close room',
+    game: 'Game', roomWord: 'Room', room: c => `Room ${c}`,
+    waitHost: 'Waiting for the host', waitHostSub: 'Once everyone is here, the host will deal roles.',
+    inRoom: 'In the room', leaveRoom: 'Leave room',
+    cardAria: 'Show or hide role',
+    tapShow: 'Tap to reveal', tapHide: 'Tap again to hide',
+    gameOver: 'Game over', joinOther: 'Join another room',
+    yes: 'Yes', cancel: 'Cancel',
+
+    roles: {
+      mafia:    ['Mafia', 'At night, you and the mafia choose who to kill. By day, pretend to be a civilian.'],
+      lawyer:   ['Lawyer', 'At night, you give one player an alibi: they can’t be voted out the next day.'],
+      doctor:   ['Doctor', 'At night, you heal one player. If someone tried to kill them, they survive.'],
+      police:   ['Police officer', 'At night, you check one player: mafia or not.'],
+      judge:    ['Judge', 'At night, you pick a player and silence them: they stay quiet all next day.'],
+      maniac:   ['Maniac', 'You hunt the mafia. At night, you kill one player. You win with the town.'],
+      civilian: ['Civilian', 'You sleep at night. By day, find the mafia and vote against them.'],
+    },
+    teams: { mafia: 'Mafia team', town: 'Town', solo: 'Mafia hunter' },
+    everyoneElse: 'everyone else',
+    lessRole: r => `Fewer: ${r}`, moreRole: r => `More: ${r}`,
+
+    needMore: (k, min) => `Not enough players: ${k} short. You need at least ${min}.`,
+    tooMany: k => `More roles than players. Remove ${k}.`,
+    noMafia: 'Add at least one mafia.',
+    mafiaHalf: 'Mafia must be less than half of the players.',
+    rolesOk: n => `${n} roles for ${n} players`,
+
+    townWon: 'The mafia is out. The town wins.',
+    mafiaWon: 'The mafia equals or outnumbers everyone else. The mafia wins.',
+    roleHidden: 'role hidden', noRole: 'no role',
+    dead: 'Dead', muted: 'Muted',
+    tallyMafia: () => 'mafia',
+    tallyTown: n => pl(n, { one: 'civilian', other: 'civilians' }),
+    tallySolo: 'maniac',
+    alive: (a, n) => `Alive: ${a} of ${n}`,
+    showRoles: 'Show roles', hideRoles: 'Hide roles',
+    noPlayers: 'No players',
+    allSpeak: 'Everyone can speak',
+    newGame: 'New game, same players',
+    playerN: i => `Player ${i}`,
+
+    noFreeCode: 'Couldn’t find a free code. Try again.',
+    offline: 'Can’t reach the server. Check your internet.',
+    offlineShort: 'Can’t reach the server',
+    fileLink: 'The link and QR will work once the site is published.',
+    roomClosed: 'Room closed',
+    roomTaken: c => `Room ${c} is already used by another game`,
+    people: n => `${n} ${pl(n, { one: 'person', other: 'people' })}`,
+    lobbyEmpty: 'No one yet. Show players the code or QR.',
+    kick: n => `Remove ${n}`,
+    dealFail: 'Couldn’t deal roles. Try again.',
+    saveFail: 'Not saved. Check your internet.',
+
+    errCode: 'The room code is 4 digits.',
+    errName: 'Enter your name.',
+    errNoRoom: 'No room with that code. Check the digits.',
+    errClosed: 'This room is already closed.',
+    goneClosed: 'The host closed the room.',
+    goneKicked: 'You’re not in this room. The host may have removed you.',
+    newDeal: 'New deal',
+    youAre: 'You',
+    youDead: 'You’re dead', youMuted: 'You can’t speak',
+    dealingNow: 'Dealing roles', dealingNowSub: 'Your card will appear in a moment.',
+    inProgress: 'Game in progress', inProgressSub: 'You’re in the room. You’ll get a role in the next deal.',
+    meTag: '(you)',
+    resumeHost: c => `Back to room ${c} (host)`,
+    resumePlayer: c => `Back to room ${c} (player)`,
+
+    askAbort: 'Stop dealing? Roles will be reset.', okAbort: 'Stop',
+    askNew: 'New game with the same players? Roles will be dealt again.', okNew: 'Deal again',
+    redealt: 'Roles dealt again',
+    askEndLocal: 'End the game? Roles reset, names stay.',
+    askEndHost: 'End the game? Everyone goes back to the lobby and roles reset.',
+    okEnd: 'End',
+    askKick: n => `Remove “${n}” from the room?`, okKick: 'Remove',
+    linkCopied: 'Link copied',
+    askClose: 'Close the room? Players will see that the game is over.', okClose: 'Close',
+    askLeave: 'Leave the room?', okLeave: 'Leave',
+  },
+};
+
+let LANG = (() => {
+  try { const v = JSON.parse(localStorage.getItem('mafia_lang')); if (LANGS.includes(v)) return v; } catch {}
+  return 'ru';
+})();
+function t(key, ...args) {
+  const v = I18N[LANG][key] ?? I18N.ru[key];
+  return typeof v === 'function' ? v(...args) : v;
+}
+/* Форма слова по числу: для русского one/few/many, для эстонского и английского one/other */
+function pl(n, forms) {
+  const cat = new Intl.PluralRules(LANG).select(n);
+  return forms[cat] ?? forms.other ?? forms.many;
+}
+
+/* Перевести статичные тексты в разметке */
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.title = t('title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  document.querySelectorAll('[data-lang-switch]').forEach(el => {
+    el.setAttribute('role', 'group');
+    el.setAttribute('aria-label', 'Язык / Keel / Language');
+    el.innerHTML = LANGS.map(l =>
+      `<button type="button" data-act="lang" data-lang="${l}" lang="${l}" aria-pressed="${l === LANG}">${l.toUpperCase()}</button>`).join('');
+  });
+}
+
+function setLang(lang) {
+  if (!LANGS.includes(lang) || lang === LANG) return;
+  LANG = lang;
+  store.set('mafia_lang', lang);
+  applyLang();
+  $('#j-err').hidden = true;
+  renderHome();
 }
 
 /* =====================================================================
@@ -688,12 +1071,6 @@ function shuffle(arr) {
   }
   return a;
 }
-function plural(n, one, few, many) {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
-  return many;
-}
 function debounce(fn, ms) { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; }
 
 const store = {
@@ -708,7 +1085,7 @@ function loadScript(src) {
     const s = document.createElement('script');
     s.src = src; s.async = true;
     s.onload = res;
-    s.onerror = () => { delete scripts[src]; s.remove(); rej(new Error('Не загрузился ' + src)); };
+    s.onerror = () => { delete scripts[src]; s.remove(); rej(new Error('Failed to load ' + src)); };
     document.head.appendChild(s);
   });
 }
@@ -730,7 +1107,7 @@ function toast(msg) {
 }
 
 /* Подтверждение в нижней шторке. Возвращает Promise<boolean> */
-function ask(text, okLabel = 'Да', danger = false) {
+function ask(text, okLabel = t('yes'), danger = false) {
   return new Promise(resolve => {
     const m = $('#modal'), ok = $('#modal-ok'), no = $('#modal-cancel');
     $('#modal-text').textContent = text;
@@ -762,7 +1139,7 @@ function makeCard(root) {
       clearTimeout(timer);
       front.className = 'face front t-' + r.team;
       front.innerHTML = `
-        <span class="f-team">${TEAM_LABEL[r.team]}</span>
+        <span class="f-team">${t('teams')[r.team]}</span>
         <div class="f-icon">${ICON[roleKey]}</div>
         <h3 class="f-name">${r.name}</h3>
         <p class="f-desc">${r.desc}</p>`;
@@ -817,16 +1194,16 @@ function renderRoles(scope) {
       <span class="ri t-${r.team}">${ICON[k]}</span>
       <span class="rn">${r.name}</span>
       <div class="stepper">
-        <button data-act="role-dec" data-role="${k}" data-scope="${scope}" aria-label="Меньше: ${r.name}" ${c[k] <= 0 ? 'disabled' : ''}>−</button>
+        <button data-act="role-dec" data-role="${k}" data-scope="${scope}" aria-label="${t('lessRole', r.name)}" ${c[k] <= 0 ? 'disabled' : ''}>−</button>
         <output>${c[k]}</output>
-        <button data-act="role-inc" data-role="${k}" data-scope="${scope}" aria-label="Больше: ${r.name}" ${canInc ? '' : 'disabled'}>+</button>
+        <button data-act="role-inc" data-role="${k}" data-scope="${scope}" aria-label="${t('moreRole', r.name)}" ${canInc ? '' : 'disabled'}>+</button>
       </div>
     </li>`;
   }).join('');
 
   $('#roles-' + scope).innerHTML = rows + `<li>
       <span class="ri t-town">${ICON.civilian}</span>
-      <span class="rn">Мирный житель<small>все остальные</small></span>
+      <span class="rn">${ROLES.civilian.name}<small>${t('everyoneElse')}</small></span>
       <output class="civ-n">${chk.civ}</output>
     </li>`;
 
@@ -853,39 +1230,39 @@ function renderPanel() {
 
   let note = '';
   if (players.some(p => p.role)) {
-    if (maf === 0) note = 'Мафия выбыла. Мирные победили.';
-    else if (maf > 0 && maf >= town + solo) note = 'Мафии не меньше, чем остальных. Мафия победила.';
+    if (maf === 0) note = t('townWon');
+    else if (maf > 0 && maf >= town + solo) note = t('mafiaWon');
   }
 
   const rows = players.map(p => {
     const r = roleOf(p.role);
     const roleHTML = ctx.rolesHidden
-      ? `<span class="p-role">роль скрыта</span>`
+      ? `<span class="p-role">${t('roleHidden')}</span>`
       : r ? `<span class="p-role t-${r.team}">${ICON[p.role]}${r.name}</span>`
-          : `<span class="p-role">без роли</span>`;
+          : `<span class="p-role">${t('noRole')}</span>`;
     return `<li class="${p.alive ? '' : 'dead'}">
       <div class="p-main"><span class="p-name">${esc(p.name)}</span>${roleHTML}</div>
-      <button class="tog tog-dead" data-act="tog" data-field="alive" data-id="${esc(p.id)}" aria-pressed="${!p.alive}">${ICON.skull}<span>Убит</span></button>
-      <button class="tog tog-mute" data-act="tog" data-field="muted" data-id="${esc(p.id)}" aria-pressed="${!!p.muted}">${ICON.micOff}<span>Молчит</span></button>
+      <button class="tog tog-dead" data-act="tog" data-field="alive" data-id="${esc(p.id)}" aria-pressed="${!p.alive}">${ICON.skull}<span>${t('dead')}</span></button>
+      <button class="tog tog-mute" data-act="tog" data-field="muted" data-id="${esc(p.id)}" aria-pressed="${!!p.muted}">${ICON.micOff}<span>${t('muted')}</span></button>
     </li>`;
   }).join('');
 
   el.innerHTML = `
     <div class="tally">
-      <div class="tally-i mafia"><span class="tally-n">${maf}</span><span class="tally-l">${plural(maf, 'мафия', 'мафии', 'мафии')}</span></div>
-      <div class="tally-i"><span class="tally-n">${town}</span><span class="tally-l">${plural(town, 'мирный', 'мирных', 'мирных')}</span></div>
-      ${hasSolo ? `<div class="tally-i"><span class="tally-n">${solo}</span><span class="tally-l">маньяк</span></div>` : ''}
+      <div class="tally-i mafia"><span class="tally-n">${maf}</span><span class="tally-l">${t('tallyMafia', maf)}</span></div>
+      <div class="tally-i"><span class="tally-n">${town}</span><span class="tally-l">${t('tallyTown', town)}</span></div>
+      ${hasSolo ? `<div class="tally-i"><span class="tally-n">${solo}</span><span class="tally-l">${t('tallySolo')}</span></div>` : ''}
     </div>
     ${note ? `<p class="tally-note">${note}</p>` : ''}
     <div class="list-head">
-      <span>Живы ${alive.length} из ${players.length}</span>
-      <button class="btn small ghost" data-act="toggle-roles">${ctx.rolesHidden ? ICON.eye + 'Показать роли' : ICON.eyeOff + 'Скрыть роли'}</button>
+      <span>${t('alive', alive.length, players.length)}</span>
+      <button class="btn small ghost" data-act="toggle-roles">${ctx.rolesHidden ? ICON.eye + t('showRoles') : ICON.eyeOff + t('hideRoles')}</button>
     </div>
-    <ul class="plist">${rows || '<li class="empty">Игроков нет</li>'}</ul>
+    <ul class="plist">${rows || `<li class="empty">${t('noPlayers')}</li>`}</ul>
     <div class="panel-actions">
-      <button class="btn" data-act="all-speak">${ICON.mic}Все могут говорить</button>
-      <button class="btn" data-act="new-game">Новая игра с теми же игроками</button>
-      <button class="btn danger" data-act="end-game">Закончить игру</button>
+      <button class="btn" data-act="all-speak">${ICON.mic}${t('allSpeak')}</button>
+      <button class="btn" data-act="new-game">${t('newGame')}</button>
+      <button class="btn danger" data-act="end-game">${t('endGame')}</button>
     </div>`;
 }
 
@@ -911,7 +1288,7 @@ function renderNames() {
   $('[data-act="n-inc"]').disabled = L.n >= MAX_P;
   $('#names').innerHTML = L.names.map((nm, i) => `<li>
       <span class="num">${i + 1}</span>
-      <input class="input" data-i="${i}" maxlength="20" value="${esc(nm)}" placeholder="Игрок ${i + 1}" enterkeyhint="${i < L.n - 1 ? 'next' : 'done'}" autocomplete="off">
+      <input class="input" data-i="${i}" maxlength="20" value="${esc(nm)}" placeholder="${esc(t('playerN', i + 1))}" enterkeyhint="${i < L.n - 1 ? 'next' : 'done'}" autocomplete="off">
     </li>`).join('');
 }
 
@@ -930,7 +1307,7 @@ function startLocalDeal() {
   if (!chk.ok) return toast(chk.msg);
   const deck = buildDeck(L.counts, L.n);
   L.players = L.names.map((nm, i) => ({
-    id: String(i), name: nm.trim() || `Игрок ${i + 1}`, role: deck[i], alive: true, muted: false,
+    id: String(i), name: nm.trim() || t('playerN', i + 1), role: deck[i], alive: true, muted: false,
   }));
   L.idx = 0; L.phase = 'ready'; L.inGame = true; L.rolesHidden = false;
   passCard.reset();
@@ -942,20 +1319,20 @@ function renderPass() {
   const p = L.players[L.idx], next = L.players[L.idx + 1];
   const btn = $('#pass-btn'), hint = $('#pass-hint');
   $('#pass-name').textContent = p.name;
-  $('#pass-prog').textContent = `${L.idx + 1} из ${L.players.length}`;
+  $('#pass-prog').textContent = t('progress', L.idx + 1, L.players.length);
 
   if (L.phase === 'ready') {
-    btn.textContent = 'Показать роль';
+    btn.textContent = t('showRole');
     btn.className = 'btn primary big';
-    hint.textContent = 'Проверь, что экран видишь только ты.';
+    hint.textContent = t('hintReady');
   } else if (L.phase === 'shown') {
-    btn.textContent = 'Скрыть';
+    btn.textContent = t('hide');
     btn.className = 'btn light big';
-    hint.textContent = 'Запомни роль и нажми «Скрыть».';
+    hint.textContent = t('hintShown');
   } else {
-    btn.textContent = next ? `Дальше: ${next.name}` : 'Все роли розданы';
+    btn.textContent = next ? t('next', next.name) : t('allDealt');
     btn.className = 'btn primary big';
-    hint.textContent = next ? `Роль скрыта. Передай телефон: ${next.name}.` : 'Роль скрыта. Верни телефон ведущему.';
+    hint.textContent = next ? t('passTo', next.name) : t('passBack');
   }
 }
 
@@ -1054,17 +1431,17 @@ async function hostCreate() {
         if (!error) return openHost(code, made.created_at, true);
       }
     }
-    toast('Не удалось подобрать свободный код. Попробуй ещё раз.');
+    toast(t('noFreeCode'));
   } catch (e) {
     console.error(e);
-    toast('Нет связи с сервером. Проверь интернет.');
+    toast(t('offline'));
   } finally {
     btn.disabled = false;
   }
 }
 
 async function openHost(code, created, fresh = false) {
-  try { await getSb(); } catch { return toast('Нет связи с сервером. Проверь интернет.'); }
+  try { await getSb(); } catch { return toast(t('offline')); }
   unsubscribe(P);                                     // на одном телефоне одна роль за раз
   state.mode = 'host';
   Object.assign(H, { code, created, status: 'lobby', players: [], loaded: false, busy: false, rolesHidden: false });
@@ -1073,9 +1450,9 @@ async function openHost(code, created, fresh = false) {
   setUrl(null);
 
   $('#h-code').textContent = code;
-  $('#hg-title').textContent = `Комната ${code}`;
+  $('#hg-title').textContent = t('room', code);
   const link = roomLink(code);
-  $('#h-link').textContent = location.protocol === 'file:' ? 'Ссылка и QR заработают, когда сайт будет опубликован.' : link;
+  $('#h-link').textContent = location.protocol === 'file:' ? t('fileLink') : link;
   renderQR(link);
   renderLobby();
   show('s-host-lobby');
@@ -1105,16 +1482,16 @@ async function hostSync() {
     sb.from('mafia_players').select('id,name,role,alive,muted,created_at').eq('room_code', code).order('created_at'),
   ]);
   if (state.mode !== 'host' || H.code !== code || seq !== syncSeq) return;
-  if (room.error || list.error) return toast('Нет связи с сервером');
+  if (room.error || list.error) return toast(t('offlineShort'));
   if (!room.data || room.data.status === 'closed') {
     store.del('mafia_host');
-    toast('Комната закрыта');
+    toast(t('roomClosed'));
     return goHome();
   }
   // Код комнаты уже занят другой игрой: в неё не заходим
   if (H.created && room.data.created_at !== H.created) {
     store.del('mafia_host');
-    toast(`Комната ${code} уже занята другой игрой`);
+    toast(t('roomTaken', code));
     return goHome();
   }
   if (!H.created) { H.created = room.data.created_at; store.set('mafia_host', { room: code, created: H.created }); }
@@ -1134,15 +1511,15 @@ async function hostSync() {
 
 function renderLobby() {
   const n = H.players.length;
-  $('#h-count').textContent = H.loaded ? `${n} ${plural(n, 'человек', 'человека', 'человек')}` : '';
+  $('#h-count').textContent = H.loaded ? t('people', n) : '';
   $('#h-roster').innerHTML = !H.loaded
     ? '<li><span class="skel"></span></li><li><span class="skel"></span></li><li><span class="skel"></span></li>'
     : n === 0
-      ? '<li class="empty">Пока никого. Покажи игрокам код или QR.</li>'
+      ? `<li class="empty">${t('lobbyEmpty')}</li>`
       : H.players.map((p, i) => `<li>
           <span class="num">${i + 1}</span>
           <span class="nm">${esc(p.name)}</span>
-          <button class="icon-btn" data-act="kick" data-id="${esc(p.id)}" aria-label="Убрать ${esc(p.name)}">${ICON.close}</button>
+          <button class="icon-btn" data-act="kick" data-id="${esc(p.id)}" aria-label="${esc(t('kick', p.name))}">${ICON.close}</button>
         </li>`).join('');
   renderRoles('host');
 }
@@ -1175,7 +1552,7 @@ async function hostDeal() {
     return true;
   } catch (e) {
     console.error(e);
-    toast('Не получилось раздать роли. Попробуй ещё раз.');
+    toast(t('dealFail'));
     return false;
   } finally {
     H.busy = false;
@@ -1187,13 +1564,13 @@ async function hostDeal() {
 async function hostToLobby() {
   const a = await sb.from('mafia_players').update({ role: null, alive: true, muted: false }).eq('room_code', H.code);
   const b = await sb.from('mafia_rooms').update({ status: 'lobby' }).eq('code', H.code);
-  if (a.error || b.error) toast('Нет связи с сервером');
+  if (a.error || b.error) toast(t('offlineShort'));
   hostSync();
 }
 
 async function hostUpdate(query) {
   const { error } = await query;
-  if (error) { toast('Не сохранилось. Проверь интернет.'); hostSync(); }
+  if (error) { toast(t('saveFail')); hostSync(); }
 }
 
 /* =====================================================================
@@ -1212,8 +1589,8 @@ async function onJoinSubmit(e) {
   const code = $('#j-code').value.replace(/\D/g, '');
   const name = $('#j-name').value.trim();
   const err = msg => { const el = $('#j-err'); el.textContent = msg; el.hidden = !msg; };
-  if (code.length !== 4) return err('Код комнаты: 4 цифры.');
-  if (!name) return err('Напиши своё имя.');
+  if (code.length !== 4) return err(t('errCode'));
+  if (!name) return err(t('errName'));
   err('');
   const btn = $('#j-btn');
   btn.disabled = true;
@@ -1221,8 +1598,8 @@ async function onJoinSubmit(e) {
     await getSb();
     const { data: room, error } = await sb.from('mafia_rooms').select('status').eq('code', code).maybeSingle();
     if (error) throw error;
-    if (!room) return err('Комнаты с таким кодом нет. Проверь цифры.');
-    if (room.status === 'closed') return err('Эта комната уже закрыта.');
+    if (!room) return err(t('errNoRoom'));
+    if (room.status === 'closed') return err(t('errClosed'));
 
     const prev = store.get('mafia_player');
     if (prev?.id && prev.room === code) {
@@ -1245,20 +1622,20 @@ async function onJoinSubmit(e) {
     openPlayer(me.id, code);
   } catch (ex) {
     console.error(ex);
-    err('Нет связи с сервером. Проверь интернет.');
+    err(t('offline'));
   } finally {
     btn.disabled = false;
   }
 }
 
 async function openPlayer(id, code) {
-  try { await getSb(); } catch { renderHome(); return toast('Нет связи с сервером. Проверь интернет.'); }
+  try { await getSb(); } catch { renderHome(); return toast(t('offline')); }
   unsubscribe(H);
   state.mode = 'player';
   Object.assign(P, { id, code, me: null, status: null, roster: [], lastRole: null, busy: false });
   plCard.reset();
   setUrl(code);
-  $('#pl-title').textContent = `Комната ${code}`;
+  $('#pl-title').textContent = t('room', code);
   $('#pl-hello').textContent = '';
   $('#pl-banners').innerHTML = '';
   $('#pl-wait').hidden = false; $('#pl-game').hidden = true; $('#pl-gone').hidden = true;
@@ -1278,9 +1655,9 @@ async function plSync() {
     sb.from('mafia_players').select('id,name').eq('room_code', code).order('created_at'),
   ]);
   if (state.mode !== 'player' || P.id !== id || seq !== syncSeq) return;
-  if (room.error || me.error || list.error) return toast('Нет связи с сервером');
-  if (!room.data || room.data.status === 'closed') return plGone('Ведущий закрыл комнату.');
-  if (!me.data) return plGone('Тебя нет в этой комнате. Возможно, ведущий убрал тебя из списка.');
+  if (room.error || me.error || list.error) return toast(t('offlineShort'));
+  if (!room.data || room.data.status === 'closed') return plGone(t('goneClosed'));
+  if (!me.data) return plGone(t('goneKicked'));
 
   P.me = me.data;
   P.status = room.data.status;
@@ -1289,7 +1666,7 @@ async function plSync() {
   // Роль сменилась (новая раздача или возврат в лобби): карту закрываем
   const role = P.status === 'started' ? P.me.role : null;
   if (role !== P.lastRole) {
-    if (P.lastRole && role) toast('Новая раздача');
+    if (P.lastRole && role) toast(t('newDeal'));
     plCard.reset();
     P.lastRole = role;
   }
@@ -1299,12 +1676,12 @@ async function plSync() {
 function renderPlayer() {
   const me = P.me;
   const inGame = P.status === 'started' && roleOf(me.role);
-  $('#pl-hello').innerHTML = `Ты: <b>${esc(me.name)}</b>`;
+  $('#pl-hello').innerHTML = `${t('youAre')}: <b>${esc(me.name)}</b>`;
 
   // Плашки статуса
   let b = '';
-  if (inGame && !me.alive) b += `<div class="banner b-dead">${ICON.skull}Ты убит</div>`;
-  if (inGame && me.muted)  b += `<div class="banner b-mute">${ICON.micOff}Тебе нельзя говорить</div>`;
+  if (inGame && !me.alive) b += `<div class="banner b-dead">${ICON.skull}${t('youDead')}</div>`;
+  if (inGame && me.muted)  b += `<div class="banner b-mute">${ICON.micOff}${t('youMuted')}</div>`;
   $('#pl-banners').innerHTML = b;
 
   $('#pl-gone').hidden = true;
@@ -1313,20 +1690,20 @@ function renderPlayer() {
 
   if (inGame) {
     $('#pl-game').classList.toggle('dead', !me.alive);
-    $('#pl-hint').textContent = plCard.shown ? 'Нажми ещё раз, чтобы скрыть' : 'Нажми, чтобы показать';
+    $('#pl-hint').textContent = plCard.shown ? t('tapHide') : t('tapShow');
     return;
   }
 
   const [t, s] =
-    P.status === 'dealing' ? ['Раздаём роли', 'Сейчас появится твоя карта.'] :
-    P.status === 'started' ? ['Игра уже идёт', 'Ты в комнате. Роль придёт со следующей раздачей.'] :
-                             ['Ждём ведущего', 'Когда все соберутся, ведущий раздаст роли.'];
+    P.status === 'dealing' ? [t('dealingNow'), t('dealingNowSub')] :
+    P.status === 'started' ? [t('inProgress'), t('inProgressSub')] :
+                             [t('waitHost'), t('waitHostSub')];
   $('#pl-wait-t').textContent = t;
   $('#pl-wait-s').textContent = s;
   const n = P.roster.length;
-  $('#pl-count').textContent = `${n} ${plural(n, 'человек', 'человека', 'человек')}`;
+  $('#pl-count').textContent = t('people', n);
   $('#pl-roster').innerHTML = P.roster.map((p, i) =>
-    `<li><span class="num">${i + 1}</span><span class="nm ${p.id === me.id ? 'me' : ''}">${esc(p.name)}${p.id === me.id ? ' (ты)' : ''}</span></li>`).join('');
+    `<li><span class="num">${i + 1}</span><span class="nm ${p.id === me.id ? 'me' : ''}">${esc(p.name)}${p.id === me.id ? ' ' + t('meTag') : ''}</span></li>`).join('');
 }
 
 function plGone(msg) {
@@ -1346,7 +1723,7 @@ async function onPlayerCard() {
   P.busy = true;
   if (plCard.shown) await plCard.hide(); else await plCard.show(P.me.role);
   P.busy = false;
-  $('#pl-hint').textContent = plCard.shown ? 'Нажми ещё раз, чтобы скрыть' : 'Нажми, чтобы показать';
+  $('#pl-hint').textContent = plCard.shown ? t('tapHide') : t('tapShow');
 }
 
 /* =====================================================================
@@ -1368,8 +1745,8 @@ function goHome() {
 function renderHome() {
   const h = store.get('mafia_host'), p = store.get('mafia_player');
   let html = '';
-  if (h?.room) html += `<button class="btn" data-act="resume-host">Вернуться в комнату ${esc(h.room)} (ведущий)</button>`;
-  if (p?.room) html += `<button class="btn" data-act="resume-player">Вернуться в комнату ${esc(p.room)} (игрок)</button>`;
+  if (h?.room) html += `<button class="btn" data-act="resume-host">${t('resumeHost', esc(h.room))}</button>`;
+  if (p?.room) html += `<button class="btn" data-act="resume-player">${t('resumePlayer', esc(p.room))}</button>`;
   $('#resume').innerHTML = html;
 }
 
@@ -1377,6 +1754,7 @@ function renderHome() {
    ДЕЙСТВИЯ ПО КНОПКАМ (одно делегирование на весь документ)
    ===================================================================== */
 const actions = {
+  'lang':        b => setLang(b.dataset.lang),
   'mode-local':  () => openLocalSetup(),
   'mode-online': () => show('s-online'),
   'back-home':   () => goHome(),
@@ -1396,7 +1774,7 @@ const actions = {
   'deal-local': () => startLocalDeal(),
   'pass-btn':   () => onPassBtn(),
   'pass-abort': async () => {
-    if (!await ask('Прервать раздачу? Роли сбросятся.', 'Прервать', true)) return;
+    if (!await ask(t('askAbort'), t('okAbort'), true)) return;
     passCard.reset(); L.inGame = false; openLocalSetup();
   },
 
@@ -1416,20 +1794,20 @@ const actions = {
     const ctx = state.mode === 'local' ? L : H;
     ctx.players.forEach(p => { p.muted = false; });
     renderPanel();
-    toast('Все могут говорить');
+    toast(t('allSpeak'));
     if (state.mode === 'host') hostUpdate(sb.from('mafia_players').update({ muted: false }).eq('room_code', H.code));
   },
   'new-game': async () => {
-    if (!await ask('Новая игра с теми же игроками? Роли перераздадутся заново.', 'Перераздать')) return;
+    if (!await ask(t('askNew'), t('okNew'))) return;
     if (state.mode === 'local') startLocalDeal();
-    else if (await hostDeal()) toast('Роли перерозданы');
+    else if (await hostDeal()) toast(t('redealt'));
   },
   'end-game': async () => {
     if (state.mode === 'local') {
-      if (!await ask('Закончить игру? Роли сбросятся, имена останутся.', 'Закончить', true)) return;
+      if (!await ask(t('askEndLocal'), t('okEnd'), true)) return;
       L.inGame = false; openLocalSetup();
     } else {
-      if (!await ask('Закончить игру? Все вернутся в лобби, роли сбросятся.', 'Закончить', true)) return;
+      if (!await ask(t('askEndHost'), t('okEnd'), true)) return;
       hostToLobby();
     }
   },
@@ -1438,20 +1816,20 @@ const actions = {
   'deal-host': () => hostDeal(),
   'kick': async b => {
     const p = H.players.find(x => x.id === b.dataset.id);
-    if (!p || !await ask(`Убрать «${p.name}» из комнаты?`, 'Убрать', true)) return;
+    if (!p || !await ask(t('askKick', p.name), t('okKick'), true)) return;
     hostUpdate(sb.from('mafia_players').delete().eq('id', p.id).eq('room_code', H.code));
   },
   'share-link': async () => {
     const url = roomLink(H.code);
-    if (navigator.share) { try { await navigator.share({ title: 'Мафия', text: `Комната ${H.code}`, url }); } catch {} }
+    if (navigator.share) { try { await navigator.share({ title: t('title'), text: t('room', H.code), url }); } catch {} }
     else actions['copy-link']();
   },
   'copy-link': async () => {
-    try { await navigator.clipboard.writeText(roomLink(H.code)); toast('Ссылка скопирована'); }
+    try { await navigator.clipboard.writeText(roomLink(H.code)); toast(t('linkCopied')); }
     catch { toast(roomLink(H.code)); }
   },
   'close-room': async () => {
-    if (!await ask('Закрыть комнату? Игроки увидят, что игра закончилась.', 'Закрыть', true)) return;
+    if (!await ask(t('askClose'), t('okClose'), true)) return;
     await sb.from('mafia_rooms').update({ status: 'closed' }).eq('code', H.code);
     store.del('mafia_host');
     goHome();
@@ -1460,7 +1838,7 @@ const actions = {
   // Режим B: игрок
   'pl-card': () => onPlayerCard(),
   'pl-leave': async () => {
-    if (!await ask('Выйти из комнаты?', 'Выйти', true)) return;
+    if (!await ask(t('askLeave'), t('okLeave'), true)) return;
     const id = P.id;
     unsubscribe(P);
     store.del('mafia_player');
@@ -1516,6 +1894,7 @@ window.addEventListener('beforeunload', e => {
    ===================================================================== */
 (function init() {
   document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = ICON[el.dataset.icon]; });
+  applyLang();
   passCard = makeCard($('#pass-card'));
   plCard = makeCard($('#pl-card'));
 
