@@ -627,11 +627,11 @@ const ROLES = {
   doctor:   { name: 'Доктор',        team: 'town',  max: MAX_P, desc: 'Ночью лечишь одного игрока. Если его пытались убить, он выживет.' },
   police:   { name: 'Полицейский',   team: 'town',  max: MAX_P, desc: 'Помощник Комиссара. Если Комиссар погибнет, ты займёшь его место.' },
   judge:    { name: 'Судья',         team: 'town',  max: 1,     desc: 'Один раз за игру можешь отменить казнь после дневного голосования.' },
-  maniac:   { name: 'Маньяк',        team: 'solo',  max: MAX_P, desc: 'Играешь сам за себя. Ночью убиваешь одного игрока. Победа, если останешься последним.' },
+  maniac:   { name: 'Маньяк',        team: 'solo',  max: MAX_P, desc: 'Охотишься на мафию. Ночью убиваешь одного игрока. Побеждаешь вместе с мирными.' },
   civilian: { name: 'Мирный житель', team: 'town',  max: MAX_P, desc: 'Ночью спишь. Днём ищешь мафию и голосуешь против неё.' },
 };
 const SPECIALS = ['mafia', 'lawyer', 'sheriff', 'police', 'doctor', 'judge', 'maniac'];   // мирные считаются сами
-const TEAM_LABEL = { mafia: 'Команда мафии', town: 'Мирные', solo: 'Сам за себя' };
+const TEAM_LABEL = { mafia: 'Команда мафии', town: 'Мирные', solo: 'Охотник на мафию' };
 const roleOf = key => ROLES[key] || null;
 
 /* Авто-расклад: примерно 1 мафия на 3–4 игрока (Адвокат входит в их число с 9 игроков),
@@ -856,8 +856,7 @@ function renderPanel() {
 
   let note = '';
   if (players.some(p => p.role)) {
-    if (maf === 0 && solo === 0) note = 'Мафия выбыла. Мирные победили.';
-    else if (maf === 0 && solo > 0 && solo >= town) note = 'Остался Маньяк против мирных.';
+    if (maf === 0) note = 'Мафия выбыла. Мирные победили.';
     else if (maf > 0 && maf >= town + solo) note = 'Мафии не меньше, чем остальных. Мафия победила.';
   }
 
